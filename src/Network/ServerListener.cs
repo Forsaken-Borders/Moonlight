@@ -25,8 +25,8 @@ namespace Moonlight.Network
                 Environment.Exit(1);
             }
 
-            TcpListener tcpListener = new(listeningIp, Program.Configuration.GetValue("port", 25565));
-            tcpListener.Start(Program.Configuration.GetValue("max_pending_connections", 1000));
+            TcpListener tcpListener = new(listeningIp, Program.Configuration.GetValue("server:port", 25565));
+            tcpListener.Start(Program.Configuration.GetValue("server:max_pending_connections", 1000));
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (!tcpListener.Pending())
@@ -51,7 +51,7 @@ namespace Moonlight.Network
                 {
                     version = new
                     {
-                        name = "Moonlight 1.17.1",
+                        name = Program.Configuration.GetValue("server:name", "Moonlight 1.17.1"),
                         protocol = 756
                     },
                     players = new
@@ -66,7 +66,7 @@ namespace Moonlight.Network
                             },
                         description = new
                         {
-                            text = "Hello world"
+                            text = Program.Configuration.GetValue("server:description", "Moonlight: A C# implementation of the Minecraft Server Protocol.")
                         },
                     }
                 }, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })));

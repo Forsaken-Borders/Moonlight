@@ -10,12 +10,12 @@ namespace Moonlight.Network
         public MinecraftClient(TcpClient tcpClient)
         {
             TcpClient = tcpClient;
-            if (Program.Configuration.GetValue("online_mode", true))
+            if (Program.Configuration.GetValue("server:online_mode", true))
             {
                 // TODO: Setup encryption and username validation
             }
 
-            if (Program.Configuration.GetValue("compression", true))
+            if (Program.Configuration.GetValue("server:compress_packets", true))
             {
                 // TODO: Send compression packet
             }
