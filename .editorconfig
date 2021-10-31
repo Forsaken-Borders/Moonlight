@@ -1,0 +1,10 @@
+root = true
+
+[*.cs]
+dotnet_analyzer_diagnostic.severity = warning
+dotnet_style_namespace_match_folder = false
+csharp_style_unused_value_expression_statement_preference = none
+csharp_style_expression_bodied_methods = when_on_single_line
+csharp_style_expression_bodied_constructors = when_on_single_line
+csharp_style_expression_bodied_operators = when_on_single_line
+dotnet_diagnostic.IDE0130.severity = none
