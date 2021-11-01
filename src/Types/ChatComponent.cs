@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Moonlight.Types
@@ -30,7 +29,7 @@ namespace Moonlight.Types
         public string Insertation { get; set; }
 
         [JsonPropertyName("extra")]
-        public List<ChatComponent> Extra { get; set; }
+        public ChatComponent[] Extra { get; set; }
 
         public ChatComponent(string text) => Text = text;
     }

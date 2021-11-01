@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Moonlight.Network.Packets
@@ -7,7 +6,7 @@ namespace Moonlight.Network.Packets
     public class Packet
     {
         [JsonIgnore]
-        public int Id { get; init; }
+        public virtual int Id { get; init; }
 
         [JsonIgnore]
         public byte[] Data { get; set; }
@@ -28,7 +27,6 @@ namespace Moonlight.Network.Packets
             Data = Encoding.UTF8.GetBytes(data);
         }
 
-        public int CalculateLength() => Id.GetVarIntLength() + (Data?.Length ?? 0);
-        public static implicit operator byte[](Packet handshakePacket) => JsonSerializer.SerializeToUtf8Bytes(handshakePacket, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        public virtual int CalculateLength() => Id.GetVarIntLength() + (Data?.Length ?? 0);
     }
 }

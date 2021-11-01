@@ -11,10 +11,18 @@ namespace Moonlight.Network.Packets
         {
             Id = id;
             Data = data;
-            PacketHandler packetHandler = new(new MemoryStream(data));
+            using PacketHandler packetHandler = new(data);
             Payload = packetHandler.ReadLong();
         }
 
-        public PingPongPacket(long payload) => Payload = payload;
+        public PingPongPacket(long payload)
+        {
+            Payload = payload;
+            using PacketHandler packetHandler = new(new MemoryStream());
+            packetHandler.WriteVarInt(CalculateLength());
+            packetHandler.WriteVarInt(Id);
+            packetHandler.WriteLong(Payload);
+            Data = packetHandler.ReadNextPacket().Data;
+        }
     }
 }

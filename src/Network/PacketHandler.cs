@@ -11,7 +11,7 @@ using Serilog;
 
 namespace Moonlight.Network
 {
-    public class PacketHandler
+    public class PacketHandler : IDisposable
     {
         public Stream Stream { get; init; }
         public CancellationToken CancellationToken { get; init; }
@@ -20,6 +20,18 @@ namespace Moonlight.Network
         public PacketHandler(Stream stream, CancellationToken cancellationToken = new())
         {
             Stream = stream;
+            Logger = Program.Logger.ForContext<PacketHandler>();
+            CancellationToken = cancellationToken;
+        }
+
+        public PacketHandler(byte[] data, CancellationToken cancellationToken = new())
+        {
+            if (data is null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            Stream = new MemoryStream(data);
             Logger = Program.Logger.ForContext<PacketHandler>();
             CancellationToken = cancellationToken;
         }
@@ -336,7 +348,7 @@ namespace Moonlight.Network
             return result;
         }
 
-        public T ReadNextPacket<T>() where T : Packet
+        public Packet ReadNextPacket()
         {
             int totalPacketLength = ReadVarInt();
             int packetId = ReadVarInt();
@@ -344,16 +356,16 @@ namespace Moonlight.Network
 
             if (packetDataLength <= 0)
             {
-                return (T)new Packet(packetId);
+                return new Packet(packetId);
             }
 
             byte[] packetData = new byte[packetDataLength];
             Stream.Read(packetData);
 
-            return (T)new Packet(packetId, packetData);
+            return new Packet(packetId, packetData);
         }
 
-        public async Task<T> ReadNextPacketAsync<T>() where T : Packet
+        public async Task<Packet> ReadNextPacketAsync()
         {
             int totalPacketLength = await ReadVarIntAsync();
             int packetId = await ReadVarIntAsync();
@@ -361,13 +373,13 @@ namespace Moonlight.Network
 
             if (packetDataLength <= 0)
             {
-                return (T)new Packet(packetId);
+                return new Packet(packetId);
             }
 
             byte[] packetData = new byte[packetDataLength];
             await Stream.ReadAsync(packetData, CancellationToken);
 
-            return (T)new Packet(packetId, packetData);
+            return new Packet(packetId, packetData);
         }
 
         public void WriteUnsignedByte(byte value) => Stream.WriteByte(value);
@@ -583,6 +595,12 @@ namespace Moonlight.Network
             await WriteVarIntAsync(packet.Id);
             await WriteUnsignedBytesAsync(packet.Data);
             await Stream.FlushAsync(CancellationToken);
+        }
+
+        public void Dispose()
+        {
+            Stream.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }
