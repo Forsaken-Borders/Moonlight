@@ -1,5 +1,4 @@
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Moonlight.Network.Packets
 {
@@ -11,29 +10,24 @@ namespace Moonlight.Network.Packets
         public int ServerPort { get; init; } = 25565;
         public ClientState NextClientState { get; init; } = ClientState.Status;
 
+        public HandshakePacket(int id, byte[] data)
+        {
+            Id = id;
+            Data = data;
+
+            PacketHandler packetHandler = new(new MemoryStream(data));
+            ProtocolVersion = packetHandler.ReadVarInt();
+            ServerAddress = packetHandler.ReadString();
+            ServerPort = packetHandler.ReadUnsignedShort();
+            NextClientState = (ClientState)packetHandler.ReadVarInt();
+        }
+
         public HandshakePacket(int protocolVersion = -1, string serverAddress = "127.0.0.1", int serverPort = 25565, ClientState clientState = ClientState.Status) : base()
         {
             ProtocolVersion = protocolVersion;
             ServerAddress = serverAddress;
             ServerPort = serverPort;
             NextClientState = clientState;
-        }
-
-        public static async Task<HandshakePacket> Create(byte[] data)
-        {
-            PacketHandler packetHandler = new(new MemoryStream(data));
-            int protocolVersion = await packetHandler.ReadVarIntAsync();
-            string serverAddress = await packetHandler.ReadStringAsync();
-            ushort serverPort = await packetHandler.ReadUnsignedShortAsync();
-            ClientState nextClientState = (ClientState)await packetHandler.ReadVarIntAsync();
-
-            return new()
-            {
-                ProtocolVersion = protocolVersion,
-                ServerAddress = serverAddress,
-                ServerPort = serverPort,
-                NextClientState = nextClientState
-            };
         }
     }
 

@@ -31,7 +31,7 @@ namespace Moonlight.Network
             {
                 if (!tcpListener.Pending())
                 {
-                    await Task.Delay(10);
+                    await Task.Delay(10, cancellationToken);
                 }
 
                 TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync();
@@ -41,12 +41,13 @@ namespace Moonlight.Network
                 }
 
                 PacketHandler packetHandler = new(tcpClient.GetStream(), cancellationToken);
-                HandshakePacket handshakePacket = await HandshakePacket.Create((await packetHandler.ReadNextPacketAsync()).Data);
-                Logger.Information("Handshake Packet Recieved,\n\tProtocol Version: {version},\n\tServer Address: {address},\n\tPort: {port},\n\tNext State: {state}", handshakePacket.ProtocolVersion, handshakePacket.ServerAddress, handshakePacket.ServerAddress, handshakePacket.NextClientState);
+                HandshakePacket handshakePacket = await packetHandler.ReadNextPacketAsync<HandshakePacket>();
+                Logger.Information("Handshake Packet Received,\n\tProtocol Version: {version},\n\tServer Address: {address},\n\tPort: {port},\n\tNext State: {state}", handshakePacket.ProtocolVersion, handshakePacket.ServerAddress, handshakePacket.ServerAddress, handshakePacket.NextClientState);
 
-                Packet requestPacket = await packetHandler.ReadNextPacketAsync();
-                Logger.Information("Request Packet Recieved,\n\tId: {id}\n\tData: null", requestPacket.Id);
+                Packet requestPacket = await packetHandler.ReadNextPacketAsync<Packet>();
+                Logger.Information("Request Packet Received,\n\tId: {id}\n\tData: null", requestPacket.Id);
 
+                // TODO: Move this to a ResponsePacket class
                 Packet responsePacket = new(0x00, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
                 {
                     version = new
@@ -57,25 +58,19 @@ namespace Moonlight.Network
                     players = new
                     {
                         max = 100,
-                        online = 5,
-                        sample = new[] {
-                                new {
-                                    name = "thinkofdeath",
-                                    id = "4566e69f-c907-48ee-8d71-d7ba5aa00d20"
-                                }
-                            },
+                        online = 0,
                         description = new
                         {
-                            text = Program.Configuration.GetValue("server:description", "Moonlight: A C# implementation of the Minecraft Server Protocol.")
+                            text = Program.Configuration.GetValue("server:description", "Moonlight")
                         },
                     }
                 }, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })));
                 await packetHandler.WritePacketAsync(responsePacket);
 
-                Packet pingPacket = await packetHandler.ReadNextPacketAsync();
+                PingPongPacket pingPacket = await packetHandler.ReadNextPacketAsync<PingPongPacket>();
                 Packet pongPacket = new(0x01, pingPacket.Data);
                 await packetHandler.WritePacketAsync(pongPacket);
-                Logger.Information("Ping Packet Recieved,\n\tPacket Id: {id}\n\tPacket Data: {data}", pingPacket.Id, Encoding.UTF8.GetString(pingPacket.Data));
+                Logger.Information("Ping Packet Received,\n\tPacket Id: {id}\n\tPacket Data: {data}", pingPacket.Id, Encoding.UTF8.GetString(pingPacket.Data));
             }
         }
     }
