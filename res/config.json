@@ -1,11 +1,12 @@
 {
     "server": {
-        "online_mode": true,
-        "compress_packets": false,
+        "name": "Moonlight 1.17.1",
+        "description": "Moonlight: a C# implementation of the Minecraft Server Protocol.",
         "ip": "127.0.0.1",
         "port": 25565,
-        "name": "Moonlight 1.17.1",
-        "description": "Moonlight A CSharp implementation of the Minecraft Server Protocol"
+        "online_mode": true,
+        "compress_packets": false,
+        "max_players": 100
     },
     "logging": {
         "level": "Debug"
