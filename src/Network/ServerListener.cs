@@ -26,16 +26,27 @@ namespace Moonlight.Network
 
             TcpListener tcpListener = new(listeningIp, Program.Configuration.GetValue("server:port", 25565));
             tcpListener.Start(Program.Configuration.GetValue("server:max_pending_connections", 100));
-            while (!cancellationToken.IsCancellationRequested)
+            while (true)
             {
-                if (!tcpListener.Pending())
+                // TODO: Clean up these while loops
+                while (!tcpListener.Pending())
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
                     await Task.Delay(10, cancellationToken);
                 }
 
                 TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync();
                 while (tcpClient.Available == 0)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
                     await Task.Delay(10, cancellationToken);
                 }
 

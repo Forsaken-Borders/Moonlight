@@ -27,6 +27,7 @@ namespace Moonlight
             {
                 e.Cancel = true;
                 CancellationTokenSource.Cancel();
+                Logger.Information("Shutdown requested! Shutting down...");
             };
 
             ConfigurationBuilder configurationBuilder = new();

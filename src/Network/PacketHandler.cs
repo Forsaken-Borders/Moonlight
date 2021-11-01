@@ -9,6 +9,14 @@ using System.Threading.Tasks;
 using Moonlight.Network.Packets;
 using Serilog;
 
+/*
+ Based off of the following files:
+ - https://github.com/ObsidianMC/Obsidian/blob/958bf6e97dde05dd93019bdd0d77570cbb0520b8/Obsidian/Net/MinecraftStream.cs
+ - https://github.com/ObsidianMC/Obsidian/blob/958bf6e97dde05dd93019bdd0d77570cbb0520b8/Obsidian/Net/MinecraftStream.Reading.cs
+ - https://github.com/ObsidianMC/Obsidian/blob/958bf6e97dde05dd93019bdd0d77570cbb0520b8/Obsidian/Net/MinecraftStream.Writing.cs
+ Thank you to the ObsidianMC team!
+*/
+
 namespace Moonlight.Network
 {
     public class PacketHandler : IDisposable
