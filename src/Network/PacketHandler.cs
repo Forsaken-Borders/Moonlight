@@ -44,6 +44,8 @@ namespace Moonlight.Network
             CancellationToken = cancellationToken;
         }
 
+        
+        // An optimization would be to copy what the BCL does, which is essentially -> ReadAsync().GetAwaiter().GetResult()
         public byte ReadUnsignedByte()
         {
             byte[] totalLength = new byte[1];
@@ -58,19 +60,9 @@ namespace Moonlight.Network
             return totalLength[0];
         }
 
-        public sbyte ReadByte()
-        {
-            byte[] totalLength = new byte[1];
-            Stream.Read(totalLength);
-            return (sbyte)totalLength[0];
-        }
+        public sbyte ReadByte() => (sbyte)ReadUnsignedByte();
 
-        public async Task<sbyte> ReadByteAsync()
-        {
-            byte[] totalLength = new byte[1];
-            await Stream.ReadAsync(totalLength, CancellationToken);
-            return (sbyte)totalLength[0];
-        }
+        public async Task<sbyte> ReadByteAsync() => (sbyte) await ReadUnsignedByteAsync();
 
         public bool ReadBoolean()
         {
@@ -194,7 +186,7 @@ namespace Moonlight.Network
         {
             int length = ReadVarInt();
             byte[] buffer = new byte[length];
-            if (BitConverter.IsLittleEndian)
+            if (BitConverter.IsLittleEndian) //Why? This isn't present in any other method. 
             {
                 Array.Reverse(buffer);
             }
