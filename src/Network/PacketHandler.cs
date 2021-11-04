@@ -43,7 +43,6 @@ namespace Moonlight.Network
             Logger = Program.Logger.ForContext<PacketHandler>();
             CancellationToken = cancellationToken;
         }
-
         
         // An optimization would be to copy what the BCL does, which is essentially -> ReadAsync().GetAwaiter().GetResult()
         public byte ReadUnsignedByte()
@@ -383,15 +382,15 @@ namespace Moonlight.Network
         }
 
         public void WriteUnsignedByte(byte value) => Stream.WriteByte(value);
-        public async Task WriteUnsignedByteAsync(byte value) => await Stream.WriteAsync(new[] { value }, CancellationToken);
+        public ValueTask WriteUnsignedByteAsync(byte value) => Stream.WriteAsync(new[] { value }, CancellationToken);
         public void WriteUnsignedBytes(byte[] values) => Stream.Write(values);
-        public async Task WriteUnsignedBytesAsync(byte[] values) => await Stream.WriteAsync(values, CancellationToken);
+        public ValueTask WriteUnsignedBytesAsync(byte[] values) => Stream.WriteAsync(values, CancellationToken);
         public void WriteByte(sbyte value) => WriteUnsignedByte((byte)value);
-        public async Task WriteByteAsync(sbyte value) => await WriteUnsignedByteAsync((byte)value);
+        public ValueTask WriteByteAsync(sbyte value) => WriteUnsignedByteAsync((byte)value);
         public void WriteBytes(sbyte[] values) => WriteUnsignedBytes(values.Cast<byte>().ToArray());
-        public async Task WriteBytesAsync(sbyte[] values) => await WriteUnsignedBytesAsync(values.Cast<byte>().ToArray());
+        public ValueTask WriteBytesAsync(sbyte[] values) => WriteUnsignedBytesAsync(values.Cast<byte>().ToArray());
         public void WriteBoolean(bool value) => WriteUnsignedByte((byte)(value ? 0x01 : 0x00));
-        public async Task WriteBooleanAsync(bool value) => await WriteUnsignedByteAsync((byte)(value ? 0x01 : 0x00));
+        public ValueTask WriteBooleanAsync(bool value) => WriteUnsignedByteAsync((byte)(value ? 0x01 : 0x00));
 
         public void WriteUnsignedShort(ushort value)
         {
