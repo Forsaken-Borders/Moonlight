@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Moonlight.Network.Packets
@@ -19,12 +18,6 @@ namespace Moonlight.Network.Packets
         {
             Id = id;
             Data = data;
-        }
-
-        public Packet(int id, string data)
-        {
-            Id = id;
-            Data = Encoding.UTF8.GetBytes(data);
         }
 
         public virtual int CalculateLength() => Id.GetVarIntLength() + (Data?.Length ?? 0);

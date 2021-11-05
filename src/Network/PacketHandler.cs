@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Moonlight.Network.Packets;
-using Serilog;
+using Moonlight.Types;
 
 /*
  Based off of the following files:
@@ -21,14 +21,12 @@ namespace Moonlight.Network
 {
     public class PacketHandler : IDisposable
     {
-        public Stream Stream { get; init; }
+        public Stream Stream { get; private set; }
         public CancellationToken CancellationToken { get; init; }
-        private ILogger Logger { get; init; } // TODO: Logging
 
         public PacketHandler(Stream stream, CancellationToken cancellationToken = new())
         {
             Stream = stream;
-            Logger = Program.Logger.ForContext<PacketHandler>();
             CancellationToken = cancellationToken;
         }
 
@@ -40,10 +38,11 @@ namespace Moonlight.Network
             }
 
             Stream = new MemoryStream(data);
-            Logger = Program.Logger.ForContext<PacketHandler>();
             CancellationToken = cancellationToken;
         }
-        
+
+        public void EnableEncryption(byte[] sharedSecret) => Stream = new AesStream(Stream, sharedSecret);
+
         // An optimization would be to copy what the BCL does, which is essentially -> ReadAsync().GetAwaiter().GetResult()
         public byte ReadUnsignedByte()
         {
@@ -61,7 +60,7 @@ namespace Moonlight.Network
 
         public sbyte ReadByte() => (sbyte)ReadUnsignedByte();
 
-        public async Task<sbyte> ReadByteAsync() => (sbyte) await ReadUnsignedByteAsync();
+        public async Task<sbyte> ReadByteAsync() => (sbyte)await ReadUnsignedByteAsync();
 
         public bool ReadBoolean()
         {
@@ -185,7 +184,7 @@ namespace Moonlight.Network
         {
             int length = ReadVarInt();
             byte[] buffer = new byte[length];
-            if (BitConverter.IsLittleEndian) //Why? This isn't present in any other method. 
+            if (BitConverter.IsLittleEndian) //Why? This isn't present in any other method.
             {
                 Array.Reverse(buffer);
             }

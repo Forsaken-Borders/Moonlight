@@ -9,9 +9,8 @@ namespace Moonlight.Network.Packets
     {
         public ServerStatus Payload { get; init; }
 
-        public ResponsePacket(int id, byte[] data)
+        public ResponsePacket(byte[] data)
         {
-            Id = id;
             Data = data;
             Payload = JsonSerializer.Deserialize<ServerStatus>(data);
         }

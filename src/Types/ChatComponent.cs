@@ -32,5 +32,7 @@ namespace Moonlight.Types
         public ChatComponent[] Extra { get; set; }
 
         public ChatComponent(string text) => Text = text;
+
+        public static implicit operator ChatComponent(string text) => new(text);
     }
 }

@@ -9,6 +9,6 @@
         "max_players": 100
     },
     "logging": {
-        "level": "Debug"
+        "level": "Verbose"
     }
 }

@@ -2,29 +2,28 @@ using System.IO;
 
 namespace Moonlight.Network.Packets
 {
-    public class PingPongPacket : Packet
+    public class LoginStartPacket : Packet
     {
-        public new int Id { get; init; } = 0x01;
-        public long Payload { get; init; }
+        public string Username { get; init; }
 
-        public PingPongPacket(byte[] data)
+        public LoginStartPacket(byte[] data)
         {
             Data = data;
             using PacketHandler packetHandler = new(data);
-            Payload = packetHandler.ReadLong();
+            Username = packetHandler.ReadString();
         }
 
-        public PingPongPacket(long payload)
+        public LoginStartPacket(string username)
         {
-            Payload = payload;
+            Username = username;
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
             packetHandler.WriteVarInt(Id);
-            packetHandler.WriteLong(Payload);
+            packetHandler.WriteString(username);
             packetHandler.Stream.Position = 0;
             Data = packetHandler.ReadNextPacket().Data;
         }
 
-        public override int CalculateLength() => Id.GetVarIntLength() + Payload.GetVarLongLength();
+        public override int CalculateLength() => Id.GetVarIntLength() + Username.Length.GetVarIntLength() + Username.Length;
     }
 }

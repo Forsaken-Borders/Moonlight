@@ -10,9 +10,8 @@ namespace Moonlight.Network.Packets
         public ushort ServerPort { get; init; } = 25565;
         public ClientState NextClientState { get; init; } = ClientState.Status;
 
-        public HandshakePacket(int id, byte[] data)
+        public HandshakePacket(byte[] data)
         {
-            Id = id;
             Data = data;
 
             using PacketHandler packetHandler = new(data);
@@ -36,10 +35,11 @@ namespace Moonlight.Network.Packets
             packetHandler.WriteString(serverAddress);
             packetHandler.WriteUnsignedShort(serverPort);
             packetHandler.WriteVarInt((int)NextClientState);
+            packetHandler.Stream.Position = 0;
             Data = packetHandler.ReadNextPacket().Data;
         }
 
-        public override int CalculateLength() => Id.GetVarIntLength() + ServerAddress.Length + sizeof(ushort) + sizeof(int);
+        public override int CalculateLength() => Id.GetVarIntLength() + ServerAddress.Length.GetVarIntLength() + ServerAddress.Length + sizeof(ushort) + sizeof(int);
     }
 
     public enum ClientState
