@@ -67,7 +67,7 @@ namespace Moonlight
             ServiceProvider = services.BuildServiceProvider();
             Logger = Log.Logger;
 
-            await new ServerListener().StartAsync(CancellationTokenSource.Token);
+            await new ServerListener().StartAsync();
         }
 
         private static string GetSourceFilePathName([CallerFilePath] string callerFilePath = null) => string.IsNullOrEmpty(callerFilePath) ? "" : callerFilePath;
