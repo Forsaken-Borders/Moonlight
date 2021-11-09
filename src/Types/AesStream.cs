@@ -22,6 +22,8 @@ namespace Moonlight.Types
 
         public AesStream(Stream baseStream, byte[] sharedSecret)
         {
+            ArgumentNullException.ThrowIfNull(baseStream, nameof(baseStream));
+            ArgumentNullException.ThrowIfNull(sharedSecret, nameof(sharedSecret));
             Aes aes = Aes.Create();
             aes.Key = sharedSecret;
             aes.IV = sharedSecret;

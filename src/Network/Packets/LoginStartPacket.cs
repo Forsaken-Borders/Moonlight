@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Moonlight.Network.Packets
@@ -8,6 +9,7 @@ namespace Moonlight.Network.Packets
 
         public LoginStartPacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
             using PacketHandler packetHandler = new(data);
             Username = packetHandler.ReadString();
@@ -15,6 +17,7 @@ namespace Moonlight.Network.Packets
 
         public LoginStartPacket(string username)
         {
+            ArgumentNullException.ThrowIfNull(username, nameof(username));
             Username = username;
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());

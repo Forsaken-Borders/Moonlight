@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Moonlight.Network.Packets
@@ -10,6 +11,7 @@ namespace Moonlight.Network.Packets
 
         public EncryptionResponsePacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
             using PacketHandler packetHandler = new(data);
             int sharedSecretLength = packetHandler.ReadVarInt();
@@ -23,6 +25,8 @@ namespace Moonlight.Network.Packets
 
         public EncryptionResponsePacket(byte[] sharedSecret, byte[] verifyToken)
         {
+            ArgumentNullException.ThrowIfNull(sharedSecret, nameof(sharedSecret));
+            ArgumentNullException.ThrowIfNull(verifyToken, nameof(verifyToken));
             SharedSecret = sharedSecret;
             VerifyToken = verifyToken;
 

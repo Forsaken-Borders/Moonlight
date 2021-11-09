@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Moonlight.Network.Packets
@@ -12,6 +13,7 @@ namespace Moonlight.Network.Packets
 
         public HandshakePacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
 
             using PacketHandler packetHandler = new(data);

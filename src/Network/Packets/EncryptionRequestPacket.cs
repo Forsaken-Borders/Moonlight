@@ -18,6 +18,7 @@ namespace Moonlight.Network.Packets
 
         public EncryptionRequestPacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
 
             using PacketHandler packetHandler = new(data);
@@ -28,6 +29,8 @@ namespace Moonlight.Network.Packets
 
         public EncryptionRequestPacket(byte[] publicKey, byte[] verifyToken)
         {
+            ArgumentNullException.ThrowIfNull(publicKey, nameof(publicKey));
+            ArgumentNullException.ThrowIfNull(verifyToken, nameof(verifyToken));
             PublicKey = publicKey;
             VerifyToken = verifyToken;
 

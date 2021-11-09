@@ -25,6 +25,10 @@ namespace Moonlight.Types
 
         public ServerPlayers(int maxPlayerCount, int onlinePlayerCount, List<SamplePlayer> samplePlayers)
         {
+            ArgumentNullException.ThrowIfNull(maxPlayerCount, nameof(maxPlayerCount));
+            ArgumentNullException.ThrowIfNull(onlinePlayerCount, nameof(onlinePlayerCount));
+            ArgumentNullException.ThrowIfNull(samplePlayers, nameof(samplePlayers));
+
             MaxPlayerCount = maxPlayerCount;
             OnlinePlayerCount = onlinePlayerCount;
             SamplePlayers = samplePlayers;

@@ -26,16 +26,14 @@ namespace Moonlight.Network
 
         public PacketHandler(Stream stream, CancellationToken cancellationToken = new())
         {
+            ArgumentNullException.ThrowIfNull(stream, nameof(stream));
             Stream = stream;
             CancellationToken = cancellationToken;
         }
 
         public PacketHandler(byte[] data, CancellationToken cancellationToken = new())
         {
-            if (data is null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
 
             Stream = new MemoryStream(data);
             CancellationToken = cancellationToken;
@@ -477,11 +475,8 @@ namespace Moonlight.Network
 
         public void WriteString(string value, int maxLength = short.MaxValue)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-            else if (value.Length > maxLength)
+            ArgumentNullException.ThrowIfNull(value, nameof(value));
+            if (value.Length > maxLength)
             {
                 throw new ArgumentException($"string ({value.Length}) exceeded maximum length ({maxLength})", nameof(value));
             }
@@ -493,11 +488,8 @@ namespace Moonlight.Network
 
         public async Task WriteStringAsync(string value, int maxLength = short.MaxValue)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-            else if (value.Length > maxLength)
+            ArgumentNullException.ThrowIfNull(value, nameof(value));
+            if (value.Length > maxLength)
             {
                 throw new ArgumentException($"string ({value.Length}) exceeded maximum length ({maxLength})", nameof(value));
             }

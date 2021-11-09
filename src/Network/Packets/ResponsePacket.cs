@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,12 +12,14 @@ namespace Moonlight.Network.Packets
 
         public ResponsePacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
             Payload = JsonSerializer.Deserialize<ServerStatus>(data);
         }
 
         public ResponsePacket(ServerStatus payload)
         {
+            ArgumentNullException.ThrowIfNull(payload, nameof(payload));
             Payload = payload;
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());

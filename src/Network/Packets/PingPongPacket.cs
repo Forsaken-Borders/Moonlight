@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Moonlight.Network.Packets
@@ -9,6 +10,7 @@ namespace Moonlight.Network.Packets
 
         public PingPongPacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
             using PacketHandler packetHandler = new(data);
             Payload = packetHandler.ReadLong();
@@ -16,6 +18,7 @@ namespace Moonlight.Network.Packets
 
         public PingPongPacket(long payload)
         {
+            ArgumentNullException.ThrowIfNull(payload, nameof(payload));
             Payload = payload;
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());

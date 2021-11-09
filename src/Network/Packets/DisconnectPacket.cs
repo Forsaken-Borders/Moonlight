@@ -9,7 +9,7 @@ namespace Moonlight.Network.Packets
 
         public DisconnectPacket(ChatComponent reason)
         {
-            Reason = reason;
+            Reason = reason ?? "Disconnected for an unknown reason.";
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
             packetHandler.WriteVarInt(Id);

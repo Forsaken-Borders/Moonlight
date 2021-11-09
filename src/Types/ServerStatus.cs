@@ -25,6 +25,10 @@ namespace Moonlight.Types
 
         public ServerStatus(ChatComponent description, ServerVersion version, ServerPlayers players)
         {
+            ArgumentNullException.ThrowIfNull(description, nameof(description));
+            ArgumentNullException.ThrowIfNull(version, nameof(version));
+            ArgumentNullException.ThrowIfNull(players, nameof(players));
+
             Description = description;
             Version = version;
             Players = players;

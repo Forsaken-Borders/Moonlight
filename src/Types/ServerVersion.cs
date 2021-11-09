@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 
@@ -19,6 +20,9 @@ namespace Moonlight.Types
 
         public ServerVersion(string name, int protocol)
         {
+            ArgumentNullException.ThrowIfNull(name, nameof(name));
+            ArgumentNullException.ThrowIfNull(protocol, nameof(protocol));
+
             Name = name;
             Protocol = protocol;
         }

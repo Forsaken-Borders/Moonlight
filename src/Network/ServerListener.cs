@@ -15,7 +15,7 @@ namespace Moonlight.Network
     {
         private ILogger Logger { get; set; }
 
-        internal async Task StartAsync(CancellationToken cancellationToken)
+        internal async Task StartAsync()
         {
             Logger = Program.Logger.ForContext<ServerListener>();
 
@@ -32,26 +32,26 @@ namespace Moonlight.Network
                 // TODO: Clean up these while loops
                 while (!tcpListener.Pending())
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    if (Program.CancellationTokenSource.Token.IsCancellationRequested)
                     {
                         return;
                     }
 
-                    await Task.Delay(10, cancellationToken);
+                    await Task.Delay(10, Program.CancellationTokenSource.Token);
                 }
 
-                TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync(cancellationToken);
+                TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync(Program.CancellationTokenSource.Token);
                 while (tcpClient.Available == 0)
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    if (Program.CancellationTokenSource.Token.IsCancellationRequested)
                     {
                         return;
                     }
 
-                    await Task.Delay(10, cancellationToken);
+                    await Task.Delay(10, Program.CancellationTokenSource.Token);
                 }
 
-                PacketHandler packetHandler = new(tcpClient.GetStream(), cancellationToken);
+                PacketHandler packetHandler = new(tcpClient.GetStream(), Program.CancellationTokenSource.Token);
                 HandshakePacket handshakePacket = new((await packetHandler.ReadNextPacketAsync()).Data);
                 Logger.Verbose("Handshake Packet Received,\n\tProtocol Version: {version},\n\tServer Address: {address},\n\tPort: {port},\n\tNext State: {state}", handshakePacket.ProtocolVersion, handshakePacket.ServerAddress, handshakePacket.ServerPort, handshakePacket.NextClientState);
 

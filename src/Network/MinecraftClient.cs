@@ -20,6 +20,7 @@ namespace Moonlight.Network
 
         public MinecraftClient(TcpClient tcpClient)
         {
+            ArgumentNullException.ThrowIfNull(tcpClient, nameof(tcpClient));
             PacketHandler = new(tcpClient.GetStream());
             LocalhostConnection = (tcpClient.Client.RemoteEndPoint as IPEndPoint)?.Address.ToString() == "127.0.0.1";
         }

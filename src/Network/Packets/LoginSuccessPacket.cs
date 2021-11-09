@@ -12,6 +12,7 @@ namespace Moonlight.Network.Packets
 
         public LoginSuccessPacket(byte[] data)
         {
+            ArgumentNullException.ThrowIfNull(data, nameof(data));
             Data = data;
 
             using PacketHandler packetHandler = new(data);
@@ -21,6 +22,7 @@ namespace Moonlight.Network.Packets
 
         public LoginSuccessPacket(MojangSessionServerResponse mojangSessionServerResponse)
         {
+            ArgumentNullException.ThrowIfNull(mojangSessionServerResponse, nameof(mojangSessionServerResponse));
             UUID = mojangSessionServerResponse.Id;
             Username = mojangSessionServerResponse.Name;
 
