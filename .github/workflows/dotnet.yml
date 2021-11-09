@@ -24,5 +24,5 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Moonlight-Nightly-Build
-          path: /home/runner/work/Moonlight/Moonlight/bin/Debug/net5.0/
+          path: /home/runner/work/Moonlight/Moonlight/bin/Debug/net6.0/
         if: ${{ github.event_name == 'push' }}
