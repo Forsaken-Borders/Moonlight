@@ -55,6 +55,7 @@ namespace Moonlight.Types
             await ReadStream.DisposeAsync();
             await WriteStream.DisposeAsync();
             await base.DisposeAsync();
+            GC.SuppressFinalize(this);
         }
     }
 }

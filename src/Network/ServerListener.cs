@@ -40,7 +40,7 @@ namespace Moonlight.Network
                     await Task.Delay(10, cancellationToken);
                 }
 
-                TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync();
+                TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync(cancellationToken);
                 while (tcpClient.Available == 0)
                 {
                     if (cancellationToken.IsCancellationRequested)
