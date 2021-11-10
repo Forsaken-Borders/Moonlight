@@ -8,6 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moonlight.Network.Packets;
 using Moonlight.Types;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Security;
 
 /*
  Based off of the following files:
@@ -23,6 +26,7 @@ namespace Moonlight.Network
     {
         public Stream Stream { get; private set; }
         public CancellationToken CancellationToken { get; init; }
+        public AsymmetricCipherKeyPair Keys { get; private set; }
 
         public PacketHandler(Stream stream, CancellationToken cancellationToken = new())
         {
@@ -37,6 +41,14 @@ namespace Moonlight.Network
 
             Stream = new MemoryStream(data);
             CancellationToken = cancellationToken;
+        }
+
+        // Vaguely based off of https://github.com/ObsidianMC/Obsidian/blob/755fc9ce44197a76f186ca555eaa41b5fd9efbd1/Obsidian/Net/PacketCryptography.cs#L23-L45
+        public void GenerateKeys()
+        {
+            RsaKeyPairGenerator rsaKeyPairGenerator = new();
+            rsaKeyPairGenerator.Init(new KeyGenerationParameters(new SecureRandom(), 1024));
+            Keys = rsaKeyPairGenerator.GenerateKeyPair();
         }
 
         public void EnableEncryption(byte[] sharedSecret) => Stream = new AesStream(Stream, sharedSecret);

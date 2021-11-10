@@ -1,15 +1,12 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace Moonlight.Network.Packets
 {
     public class EncryptionRequestPacket : Packet
     {
-        [SuppressMessage("Roslyn", "CA5385", Justification = "Minecraft protocol specifies 1024-bit key")]
-        public static RSACryptoServiceProvider RSAKeyPair { get; } = new(1024);
+        public override int Id => 0x01;
         public static string StaticServerId { get; } = new(Enumerable.Range(0, 20).Select(n => (char)new Random().Next('A', 'Z' + 1)).ToArray());
 
         public string ServerId { get; init; } = StaticServerId;
@@ -31,27 +28,9 @@ namespace Moonlight.Network.Packets
         {
             ArgumentNullException.ThrowIfNull(publicKey, nameof(publicKey));
             ArgumentNullException.ThrowIfNull(verifyToken, nameof(verifyToken));
+
             PublicKey = publicKey;
             VerifyToken = verifyToken;
-
-            using PacketHandler packetHandler = new(new MemoryStream());
-            packetHandler.WriteVarInt(CalculateLength());
-            packetHandler.WriteVarInt(Id);
-            packetHandler.WriteString(ServerId);
-            packetHandler.WriteVarInt(PublicKey.Length);
-            packetHandler.WriteUnsignedBytes(PublicKey);
-            packetHandler.WriteVarInt(VerifyToken.Length);
-            packetHandler.WriteUnsignedBytes(VerifyToken);
-            packetHandler.Stream.Position = 0;
-            Data = packetHandler.ReadNextPacket().Data;
-        }
-
-        public EncryptionRequestPacket(Random random = null)
-        {
-            random ??= new();
-            PublicKey = RSAKeyPair.ExportCspBlob(false);
-            VerifyToken = new byte[4];
-            random.NextBytes(VerifyToken);
 
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
