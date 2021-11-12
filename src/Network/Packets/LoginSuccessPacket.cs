@@ -10,20 +10,10 @@ namespace Moonlight.Network.Packets
         public Guid UUID { get; init; }
         public string Username { get; init; }
 
-        public LoginSuccessPacket(byte[] data)
-        {
-            ArgumentNullException.ThrowIfNull(data, nameof(data));
-            Data = data;
-
-            using PacketHandler packetHandler = new(data);
-            UUID = Guid.Parse(packetHandler.ReadString());
-            Username = packetHandler.ReadString();
-        }
-
         public LoginSuccessPacket(MojangSessionServerResponse mojangSessionServerResponse)
         {
             ArgumentNullException.ThrowIfNull(mojangSessionServerResponse, nameof(mojangSessionServerResponse));
-            UUID = mojangSessionServerResponse.Id;
+            UUID = Guid.Parse(mojangSessionServerResponse.Id);
             Username = mojangSessionServerResponse.Name;
 
             using PacketHandler packetHandler = new(new MemoryStream());

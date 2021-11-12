@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 
 namespace Moonlight.Network.Packets
 {
@@ -13,18 +12,6 @@ namespace Moonlight.Network.Packets
             Data = data;
             using PacketHandler packetHandler = new(data);
             Username = packetHandler.ReadString();
-        }
-
-        public LoginStartPacket(string username)
-        {
-            ArgumentNullException.ThrowIfNull(username, nameof(username));
-            Username = username;
-            using PacketHandler packetHandler = new(new MemoryStream());
-            packetHandler.WriteVarInt(CalculateLength());
-            packetHandler.WriteVarInt(Id);
-            packetHandler.WriteString(username);
-            packetHandler.Stream.Position = 0;
-            Data = packetHandler.ReadNextPacket().Data;
         }
 
         public override int CalculateLength() => Id.GetVarIntLength() + Username.Length.GetVarIntLength() + Username.Length;

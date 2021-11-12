@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 
 namespace Moonlight.Network.Packets
 {
@@ -21,24 +20,6 @@ namespace Moonlight.Network.Packets
             ServerAddress = packetHandler.ReadString();
             ServerPort = packetHandler.ReadUnsignedShort();
             NextClientState = (ClientState)packetHandler.ReadVarInt();
-        }
-
-        public HandshakePacket(int protocolVersion = -1, string serverAddress = "127.0.0.1", ushort serverPort = 25565, ClientState clientState = ClientState.Status) : base()
-        {
-            ProtocolVersion = protocolVersion;
-            ServerAddress = serverAddress;
-            ServerPort = serverPort;
-            NextClientState = clientState;
-
-            using PacketHandler packetHandler = new(new MemoryStream());
-            packetHandler.WriteVarInt(CalculateLength());
-            packetHandler.WriteVarInt(Id);
-            packetHandler.WriteVarInt(protocolVersion);
-            packetHandler.WriteString(serverAddress);
-            packetHandler.WriteUnsignedShort(serverPort);
-            packetHandler.WriteVarInt((int)NextClientState);
-            packetHandler.Stream.Position = 0;
-            Data = packetHandler.ReadNextPacket().Data;
         }
 
         public override int CalculateLength() => Id.GetVarIntLength() + ServerAddress.Length.GetVarIntLength() + ServerAddress.Length + sizeof(ushort) + sizeof(int);

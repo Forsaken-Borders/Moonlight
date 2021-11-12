@@ -7,22 +7,11 @@ namespace Moonlight.Network.Packets
     public class EncryptionRequestPacket : Packet
     {
         public override int Id => 0x01;
-        public static string StaticServerId { get; } = new(Enumerable.Range(0, 20).Select(n => (char)new Random().Next('A', 'Z' + 1)).ToArray());
+        public static string StaticServerId { get; } = new(Enumerable.Range(0, 10).Select(n => (char)new Random().Next('A', 'z' + 1)).ToArray());
 
         public string ServerId { get; init; } = StaticServerId;
         public byte[] PublicKey { get; init; }
         public byte[] VerifyToken { get; init; }
-
-        public EncryptionRequestPacket(byte[] data)
-        {
-            ArgumentNullException.ThrowIfNull(data, nameof(data));
-            Data = data;
-
-            using PacketHandler packetHandler = new(data);
-            ServerId = packetHandler.ReadString();
-            PublicKey = packetHandler.ReadUInt8Array(packetHandler.ReadVarInt());
-            VerifyToken = packetHandler.ReadUInt8Array(packetHandler.ReadVarInt());
-        }
 
         public EncryptionRequestPacket(byte[] publicKey, byte[] verifyToken)
         {

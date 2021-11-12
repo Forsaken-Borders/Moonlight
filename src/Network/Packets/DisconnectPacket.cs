@@ -18,6 +18,10 @@ namespace Moonlight.Network.Packets
             Data = packetHandler.ReadNextPacket().Data;
         }
 
-        public override int CalculateLength() => Id.GetVarIntLength() + Reason.ToJson().Length.GetVarIntLength() + Reason.ToJson().Length;
+        public override int CalculateLength()
+        {
+            string reasonJson = Reason.ToJson();
+            return Id.GetVarIntLength() + reasonJson.Length.GetVarIntLength() + reasonJson.Length;
+        }
     }
 }

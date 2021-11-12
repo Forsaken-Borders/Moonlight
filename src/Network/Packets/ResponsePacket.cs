@@ -10,13 +10,6 @@ namespace Moonlight.Network.Packets
     {
         public ServerStatus Payload { get; init; }
 
-        public ResponsePacket(byte[] data)
-        {
-            ArgumentNullException.ThrowIfNull(data, nameof(data));
-            Data = data;
-            Payload = JsonSerializer.Deserialize<ServerStatus>(data);
-        }
-
         public ResponsePacket(ServerStatus payload)
         {
             ArgumentNullException.ThrowIfNull(payload, nameof(payload));
@@ -29,6 +22,10 @@ namespace Moonlight.Network.Packets
             Data = packetHandler.ReadNextPacket().Data;
         }
 
-        public override int CalculateLength() => Id.GetVarIntLength() + JsonSerializer.Serialize(Payload, new JsonSerializerOptions() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }).Length.GetVarIntLength() + JsonSerializer.Serialize(Payload, new JsonSerializerOptions() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }).Length;
+        public override int CalculateLength()
+        {
+            string serverStatusJson = Payload.ToJson();
+            return Id.GetVarIntLength() + serverStatusJson.Length.GetVarIntLength() + serverStatusJson.Length;
+        }
     }
 }

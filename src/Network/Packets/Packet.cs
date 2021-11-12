@@ -18,6 +18,7 @@ namespace Moonlight.Network.Packets
         public Packet(int id, byte[] data)
         {
             ArgumentNullException.ThrowIfNull(data, nameof(data));
+
             Id = id;
             Data = data;
         }
