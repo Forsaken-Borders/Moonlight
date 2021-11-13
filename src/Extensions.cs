@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Org.BouncyCastle.Crypto;
@@ -43,9 +42,9 @@ namespace Moonlight
 
         // Slightly modified from https://gist.github.com/ammaraskar/7b4a3f73bee9dc4136539644a0f27e63
         [SuppressMessage("Roslyn", "CA5350", Justification = "Minecraft protocol and Mojang Session Servers require a SHA1 hash.")]
-        public static string MinecraftShaDigest(this string input)
+        public static string MinecraftShaDigest(this byte[] input)
         {
-            byte[] hash = SHA1.Create().ComputeHash(Encoding.UTF8.GetBytes(input));
+            byte[] hash = SHA1.Create().ComputeHash(input);
             // Reverse the bytes since BigInteger uses little endian
             Array.Reverse(hash);
 
