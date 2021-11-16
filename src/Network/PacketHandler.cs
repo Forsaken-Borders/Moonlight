@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -53,38 +54,12 @@ namespace Moonlight.Network
 
         public void EnableEncryption(byte[] sharedSecret) => Stream = new AesStream(Stream, sharedSecret);
 
-        // An optimization would be to copy what the BCL does, which is essentially -> ReadAsync().GetAwaiter().GetResult()
-        public byte ReadUnsignedByte()
-        {
-            byte[] totalLength = new byte[1];
-            Stream.Read(totalLength);
-            return totalLength[0];
-        }
-
-        public async Task<byte> ReadUnsignedByteAsync()
-        {
-            byte[] totalLength = new byte[1];
-            await Stream.ReadAsync(totalLength, CancellationToken);
-            return totalLength[0];
-        }
-
+        public byte ReadUnsignedByte() => (byte)Stream.ReadByte();
         public sbyte ReadByte() => (sbyte)ReadUnsignedByte();
-
-        public async Task<sbyte> ReadByteAsync() => (sbyte)await ReadUnsignedByteAsync();
 
         public bool ReadBoolean()
         {
             return (int)ReadUnsignedByte() switch
-            {
-                0x00 => false,
-                0x01 => true,
-                _ => throw new ArgumentOutOfRangeException("Byte returned by stream is out of range (0x00 or 0x01)", nameof(TcpClient))
-            };
-        }
-
-        public async Task<bool> ReadBooleanAsync()
-        {
-            return (int)await ReadUnsignedByteAsync() switch
             {
                 0x00 => false,
                 0x01 => true,
@@ -208,7 +183,7 @@ namespace Moonlight.Network
 
         public async Task<string> ReadStringAsync(int maxLength = short.MaxValue)
         {
-            int length = await ReadVarIntAsync();
+            int length = ReadVarInt();
             byte[] buffer = new byte[length];
             if (BitConverter.IsLittleEndian)
             {
@@ -230,27 +205,6 @@ namespace Moonlight.Network
             do
             {
                 read = ReadUnsignedByte();
-                int value = read & 0b01111111;
-                result |= value << (7 * numRead);
-
-                numRead++;
-                if (numRead > 5)
-                {
-                    throw new InvalidOperationException("VarInt is too big");
-                }
-            } while ((read & 0b10000000) != 0);
-
-            return result;
-        }
-
-        public async Task<int> ReadVarIntAsync()
-        {
-            int numRead = 0;
-            int result = 0;
-            byte read;
-            do
-            {
-                read = await ReadUnsignedByteAsync();
                 int value = read & 0b01111111;
                 result |= value << (7 * numRead);
 
@@ -293,7 +247,7 @@ namespace Moonlight.Network
         {
             if (length == 0)
             {
-                length = await ReadVarIntAsync();
+                length = ReadVarInt();
             }
 
             byte[] result = new byte[length];
@@ -335,30 +289,12 @@ namespace Moonlight.Network
             return result;
         }
 
-        public async Task<long> ReadVarLongAsync()
+        public Packet ReadNextPacket(int totalPacketLength = -1)
         {
-            int numRead = 0;
-            long result = 0;
-            byte read;
-            do
+            if (totalPacketLength == -1)
             {
-                read = await ReadUnsignedByteAsync();
-                int value = read & 0b01111111;
-                result |= (long)value << (7 * numRead);
-
-                numRead++;
-                if (numRead > 10)
-                {
-                    throw new InvalidOperationException("VarLong is too big");
-                }
-            } while ((read & 0b10000000) != 0);
-
-            return result;
-        }
-
-        public Packet ReadNextPacket()
-        {
-            int totalPacketLength = ReadVarInt();
+                totalPacketLength = ReadVarInt();
+            }
             int packetId = ReadVarInt();
             int packetDataLength = totalPacketLength - packetId.GetVarIntLength();
 
@@ -373,10 +309,13 @@ namespace Moonlight.Network
             return new Packet(packetId, packetData);
         }
 
-        public async Task<Packet> ReadNextPacketAsync()
+        public async Task<Packet> ReadNextPacketAsync(int totalPacketLength = -1)
         {
-            int totalPacketLength = await ReadVarIntAsync();
-            int packetId = await ReadVarIntAsync();
+            if (totalPacketLength == -1)
+            {
+                totalPacketLength = ReadVarInt();
+            }
+            int packetId = ReadVarInt();
             int packetDataLength = totalPacketLength - packetId.GetVarIntLength();
 
             if (packetDataLength <= 0)
@@ -391,15 +330,12 @@ namespace Moonlight.Network
         }
 
         public void WriteUnsignedByte(byte value) => Stream.WriteByte(value);
-        public ValueTask WriteUnsignedByteAsync(byte value) => Stream.WriteAsync(new[] { value }, CancellationToken);
         public void WriteUnsignedBytes(byte[] values) => Stream.Write(values);
         public ValueTask WriteUnsignedBytesAsync(byte[] values) => Stream.WriteAsync(values, CancellationToken);
         public void WriteByte(sbyte value) => WriteUnsignedByte((byte)value);
-        public ValueTask WriteByteAsync(sbyte value) => WriteUnsignedByteAsync((byte)value);
         public void WriteBytes(sbyte[] values) => WriteUnsignedBytes(values.Cast<byte>().ToArray());
         public ValueTask WriteBytesAsync(sbyte[] values) => WriteUnsignedBytesAsync(values.Cast<byte>().ToArray());
         public void WriteBoolean(bool value) => WriteUnsignedByte((byte)(value ? 0x01 : 0x00));
-        public ValueTask WriteBooleanAsync(bool value) => WriteUnsignedByteAsync((byte)(value ? 0x01 : 0x00));
 
         public void WriteUnsignedShort(ushort value)
         {
@@ -532,6 +468,8 @@ namespace Moonlight.Network
         public async Task WriteVarIntAsync(int value)
         {
             uint unsigned = (uint)value;
+            // Not the most efficient thing here, but it's better than awaiting writing a single byte (which is apparently highly discouraged)
+            IEnumerable<byte> data = new byte[5];
 
             do
             {
@@ -542,9 +480,11 @@ namespace Moonlight.Network
                     temp |= 128;
                 }
 
-                await WriteUnsignedByteAsync(temp);
+                data = data.Append(temp);
             }
             while (unsigned != 0);
+
+            await WriteUnsignedBytesAsync(data.ToArray());
         }
 
         public void WriteVarLong(long value)
@@ -568,6 +508,8 @@ namespace Moonlight.Network
         public async Task WriteVarLongAsync(long value)
         {
             ulong unsigned = (ulong)value;
+            // Not the most efficient thing here, but it's better than awaiting writing a single byte (which is apparently highly discouraged)
+            IEnumerable<byte> data = new byte[10];
 
             do
             {
@@ -578,9 +520,11 @@ namespace Moonlight.Network
                     temp |= 128;
                 }
 
-                await WriteUnsignedByteAsync(temp);
+                data = data.Append(temp);
             }
             while (unsigned != 0);
+
+            await WriteUnsignedBytesAsync(data.ToArray());
         }
 
         public void WritePacket(Packet packet)
