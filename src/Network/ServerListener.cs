@@ -64,6 +64,7 @@ namespace Moonlight.Network
                     if (handshakePacket.ProtocolVersion < 0) // Pre-Netty Rewrite server ping packet. If the client's version is before 1.7, the ProtocolVersion should be in the negatives.
                     {
                         ServerStatus serverStatus = new();
+                        string serverStatusDescription = serverStatus.ToString();
 
                         // In Beta 1.8, the size for a server status packet cannot exceed 64 bytes, packet id and packet length excluded
                         if (handshakePacket.ProtocolVersion == -1)
@@ -72,15 +73,15 @@ namespace Moonlight.Network
                             int onlinePlayerByteLength = Encoding.BigEndianUnicode.GetByteCount(new char[] { (char)serverStatus.Players.OnlinePlayerCount });
                             int maxPlayerByteLength = Encoding.BigEndianUnicode.GetByteCount(new char[] { (char)serverStatus.Players.MaxPlayerCount });
                             int serverMotdLength = 64 - (4 + onlinePlayerByteLength + maxPlayerByteLength);
-                            if (serverStatus.Description.Text.Length > serverMotdLength)
+                            if (serverStatusDescription.Length > serverMotdLength)
                             {
-                                serverStatus.Description.Text = string.Join("", serverStatus.Description.Text.Take(serverMotdLength - 5)) + "[...]";
+                                serverStatusDescription = string.Join("", serverStatusDescription.Take(serverMotdLength - 5)) + "[...]";
                             }
                         }
 
                         byte[] data = Encoding.BigEndianUnicode.GetBytes((handshakePacket.ProtocolVersion is -1)
-                            ? $"{serverStatus.Description.Text}§{serverStatus.Players.OnlinePlayerCount}§{serverStatus.Players.MaxPlayerCount}"// Beta 1.8 - Beta 1.3
-                            : $"§1\0127\01.17.1\0{serverStatus.Description.Text}\0{serverStatus.Players.OnlinePlayerCount}\0{serverStatus.Players.MaxPlayerCount}"// 1.4+ protocol
+                            ? $"{serverStatusDescription}§{serverStatus.Players.OnlinePlayerCount}§{serverStatus.Players.MaxPlayerCount}"// Beta 1.8 - Beta 1.3
+                            : $"§1\0127\01.17.1\0{serverStatusDescription}\0{serverStatus.Players.OnlinePlayerCount}\0{serverStatus.Players.MaxPlayerCount}"// 1.4+ protocol
                         );
 
                         packetHandler.WriteUnsignedByte(0xFF); // Packet Id
