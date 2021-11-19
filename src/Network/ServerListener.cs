@@ -64,7 +64,7 @@ namespace Moonlight.Network
                     if (handshakePacket.ProtocolVersion < 0) // Pre-Netty Rewrite server ping packet. If the client's version is before 1.7, the ProtocolVersion should be in the negatives.
                     {
                         ServerStatus serverStatus = new();
-                        string serverStatusDescription = serverStatus.ToString();
+                        string serverStatusDescription = serverStatus.Description.ToString(handshakePacket.ProtocolVersion == -1 ? ColorParseMode.None : ColorParseMode.Translate);
 
                         // In Beta 1.8, the size for a server status packet cannot exceed 64 bytes, packet id and packet length excluded
                         if (handshakePacket.ProtocolVersion == -1)
@@ -87,8 +87,6 @@ namespace Moonlight.Network
                         packetHandler.WriteUnsignedByte(0xFF); // Packet Id
                         packetHandler.WriteShort((short)(data.Length / 2)); // Packet length, divide by two for unknown encoding reasons.
                         packetHandler.WriteUnsignedBytes(data);
-                        packetHandler.Dispose();
-                        tcpClient.Dispose();
                     }
                     else
                     {
@@ -98,20 +96,27 @@ namespace Moonlight.Network
 
                         // By default, an empty ServerStatus constructor will grab the correct values from the config.
                         ResponsePacket responsePacket = new(new ServerStatus());
+                        if (handshakePacket.ProtocolVersion < 713) // If the client's version is before 1.16, send stylize everything in the text.
+                        {
+                            responsePacket.Payload.Description.Text = responsePacket.Payload.Description.ToString(ColorParseMode.Translate);
+                            responsePacket.Payload.Description.Extra = null;
+                            responsePacket.UpdateData();
+                        }
                         packetHandler.WritePacket(responsePacket);
                         Logger.Debug("{ipAddress} issued a server list ping.", (tcpClient.Client.RemoteEndPoint as IPEndPoint)?.Address.ToString() ?? "An unknown ip");
 
                         // Ping packet is optional, we shouldn't expect it.
-                        Packet optionalPingPacket = packetHandler.ReadNextPacket();
-                        if (optionalPingPacket != null)
+                        if (tcpClient.Connected)
                         {
-                            PingPongPacket pingPacket = new(optionalPingPacket.Data);
+                            PingPongPacket pingPacket = new(packetHandler.ReadNextPacket().Data);
                             Packet pongPacket = new(0x01, pingPacket.Data);
                             packetHandler.WritePacket(pongPacket);
                             Logger.Verbose("Ping Packet Received,\n\tPacket Id: {id}\n\tPacket Data: {data}", pingPacket.Id, pingPacket.Payload);
                         }
                     }
 
+                    packetHandler.Dispose();
+                    tcpClient.Dispose();
                     break;
                 case ClientState.Login:
                     Logger.Debug("{ipAddress} is attempting to login...", (tcpClient.Client.RemoteEndPoint as IPEndPoint)?.Address.ToString() ?? "An unknown ip");
@@ -124,7 +129,7 @@ namespace Moonlight.Network
                         packetHandler.Dispose();
                         tcpClient.Dispose();
                     }
-                    else if (handshakePacket.ProtocolVersion == 756)
+                    else if (handshakePacket.ProtocolVersion == ServerVersion.CurrentProtocol)
                     {
                         new MinecraftClient(tcpClient, cancellationToken).Login();
                     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 
@@ -15,6 +16,9 @@ namespace Moonlight.Types
 
         [JsonPropertyName("players")]
         public ServerPlayers Players { get; set; }
+
+        [JsonPropertyName("favicon")]
+        public string Favicon { get; set; } = GetFavicon();
 
         public ServerStatus()
         {
@@ -34,7 +38,13 @@ namespace Moonlight.Types
             Players = players;
         }
 
-        public override bool Equals(object obj) => obj is ServerStatus status && EqualityComparer<ChatComponent>.Default.Equals(Description, status.Description) && EqualityComparer<ServerVersion>.Default.Equals(Version, status.Version) && EqualityComparer<ServerPlayers>.Default.Equals(Players, status.Players);
-        public override int GetHashCode() => HashCode.Combine(Description, Version, Players);
+        public static string GetFavicon()
+        {
+            string serverIconPath = FileUtils.GetConfigPath() + "server_icon.png";
+            return File.Exists(serverIconPath) ? "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes(serverIconPath)) : null;
+        }
+
+        public override bool Equals(object obj) => obj is ServerStatus status && EqualityComparer<ChatComponent>.Default.Equals(Description, status.Description) && EqualityComparer<ServerVersion>.Default.Equals(Version, status.Version) && EqualityComparer<ServerPlayers>.Default.Equals(Players, status.Players) && Favicon == status.Favicon;
+        public override int GetHashCode() => HashCode.Combine(Description, Version, Players, Favicon);
     }
 }

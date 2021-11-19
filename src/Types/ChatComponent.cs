@@ -1,210 +1,62 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Moonlight.Types
 {
+    public enum ColorParseMode
+    {
+        None = 0,
+        Legacy = 1,
+        Translate = 2,
+        Hex = 3
+    };
+
+    public enum FontType
+    {
+        Default,
+        Uniform,
+        Alt
+    };
+
     public class ChatComponent
     {
-        [JsonPropertyName("text")]
         public string Text { get; set; }
-
-        [JsonPropertyName("bold")]
         public bool Bold { get; set; }
-
-        [JsonPropertyName("italic")]
         public bool Italic { get; set; }
-
-        [JsonPropertyName("underlined")]
         public bool Underlined { get; set; }
-
-        [JsonPropertyName("strikethrough")]
         public bool Strikethrough { get; set; }
-
-        [JsonPropertyName("obfuscated")]
         public bool Obfuscated { get; set; }
-
-        [JsonPropertyName("color")]
-        public string Color { get; set; }
-
-        [JsonPropertyName("insertation")]
         public string Insertation { get; set; }
-
-        [JsonPropertyName("extra")]
         public ChatComponent[] Extra { get; set; }
+        public string Font { get; set; }
 
-        public ChatComponent(string text) => Text = text;
+        [JsonIgnore]
+        public Color Color { get; set; }
+        [JsonPropertyName("color"), SuppressMessage("Roslyn", "IDE0025", Justification = "Intentionally shadowing the property behind Color, but HexColor needs to be a public field due to STJ things.")]
+        public string HexColor { get => ColorTranslator.ToHtml(Color); }
 
+        public ChatComponent(string text, bool parse = true)
+        {
+            if (parse)
+            {
+                Parse(text);
+            }
+            else
+            {
+                Text = text;
+            }
+        }
+
+        // TODO: Check if there's any legacy formatting in the Text (Text.Contains('§') is not enough since § can be by itself without any formatting occuring).
+        public bool HasFormatting() => Bold || Italic || Underlined || Strikethrough || Obfuscated || string.IsNullOrEmpty(Insertation?.Trim()) || Extra.Length != 0 || string.IsNullOrEmpty(Font?.Trim());
+        public void SetFont(FontType type) => Font = "minecraft:" + Enum.GetName(type).ToLowerInvariant();
         public static implicit operator ChatComponent(string text) => new(text);
-
-        public static string AmpersandToSectionSign(string str)
-        {
-            StringBuilder stringBuilder = new(str.Length);
-            for (int i = 0; i < str.Length; i++)
-            {
-                if (str[i] == '&')
-                {
-                    // Check if the next character is a ampersand and replace it with §, while making sure we don't go out of bounds
-                    if ((i + 1) < str.Length && str[i + 1] == '&')
-                    {
-                        stringBuilder.Append('&');
-                        i++;
-                    }
-                    else
-                    {
-                        stringBuilder.Append('§');
-                    }
-                }
-                else
-                {
-                    stringBuilder.Append(str[i]);
-                }
-            }
-
-            return stringBuilder.ToString();
-        }
-
-        public string ToString(bool hexColorCodes = false)
-        {
-            StringBuilder stringBuilder = new();
-            if (Bold)
-            {
-                stringBuilder.Append("§l");
-            }
-
-            if (Italic)
-            {
-                stringBuilder.Append("§o");
-            }
-
-            if (Underlined)
-            {
-                stringBuilder.Append("§n");
-            }
-
-            if (Strikethrough)
-            {
-                stringBuilder.Append("§m");
-            }
-
-            if (Obfuscated)
-            {
-                stringBuilder.Append("§k");
-            }
-
-            switch (Color)
-            {
-                case "dark_red":
-                case "#AA0000":
-                case "\u00A74":
-                    stringBuilder.Append("§4");
-                    break;
-                case "red":
-                case "#FF5555":
-                case "\u00A7c":
-                    stringBuilder.Append("§c");
-                    break;
-                case "gold":
-                case "#FFAA00":
-                case "\u00A76":
-                    stringBuilder.Append("§6");
-                    break;
-                case "yellow":
-                case "#FFFF55":
-                case "\u00A7e":
-                    stringBuilder.Append("§e");
-                    break;
-                case "green":
-                case "#55FF55":
-                case "\u00A7a":
-                    stringBuilder.Append("§a");
-                    break;
-                case "dark_green":
-                case "#00AA00":
-                case "\u00A72":
-                    stringBuilder.Append("§2");
-                    break;
-                case "aqua":
-                case "#55FFFF":
-                case "\u00A7b":
-                    stringBuilder.Append("§b");
-                    break;
-                case "dark_aqua":
-                case "#00AAAA":
-                case "\u00A73":
-                    stringBuilder.Append("§3");
-                    break;
-                case "dark_blue":
-                case "#0000AA":
-                case "\u00A71":
-                    stringBuilder.Append("§1");
-                    break;
-                case "blue":
-                case "#5555FF":
-                case "\u00A79":
-                    stringBuilder.Append("§9");
-                    break;
-                case "light_purple":
-                case "#FF55FF":
-                case "\u00A7d":
-                    stringBuilder.Append("§d");
-                    break;
-                case "dark_purple":
-                case "#AA00AA":
-                case "\u00A75":
-                    stringBuilder.Append("§5");
-                    break;
-                case "white":
-                case "#FFFFFF":
-                case "\u00A7f":
-                    stringBuilder.Append("§f");
-                    break;
-                case "grey":
-                case "gray":
-                case "#AAAAAA":
-                case "\u00A77":
-                    stringBuilder.Append("§7");
-                    break;
-                case "dark_grey":
-                case "dark_gray":
-                case "#555555":
-                case "\u00A78":
-                    stringBuilder.Append("§8");
-                    break;
-                case "black":
-                case "#000000":
-                case "\u00A70":
-                    stringBuilder.Append("§0");
-                    break;
-                default:
-                    if (hexColorCodes)
-                    {
-                        if (ColorTranslator.FromHtml(Color) != null)
-                        {
-                            stringBuilder.Append("§#");
-                            stringBuilder.Append(Color[0] == '#' ? Color.AsSpan(1) : Color); // Remove the #, if it exists.
-                        }
-                        else
-                        {
-                            throw new FormatException($"Invalid color code: {Color}");
-                        }
-                    } // if hexColorCodes is false, ignore the custom color.
-                    break;
-            }
-
-            stringBuilder.Append(AmpersandToSectionSign(Text));
-            foreach (ChatComponent chatComponent in Extra)
-            {
-                stringBuilder.Append(chatComponent.ToString());
-            }
-
-            return stringBuilder.ToString();
-        }
-
-        public override bool Equals(object obj) => obj is ChatComponent component && Text == component.Text && Bold == component.Bold && Italic == component.Italic && Underlined == component.Underlined && Strikethrough == component.Strikethrough && Obfuscated == component.Obfuscated && Color == component.Color && Insertation == component.Insertation && EqualityComparer<ChatComponent[]>.Default.Equals(Extra, component.Extra);
-
+        public override string ToString() => ToString(ColorParseMode.None, true);
+        public override bool Equals(object obj) => obj is ChatComponent component && Text == component.Text && Bold == component.Bold && Italic == component.Italic && Underlined == component.Underlined && Strikethrough == component.Strikethrough && Obfuscated == component.Obfuscated && Insertation == component.Insertation && EqualityComparer<ChatComponent[]>.Default.Equals(Extra, component.Extra) && Font == component.Font && Color.Equals(component.Color) && HexColor == component.HexColor;
         public override int GetHashCode()
         {
             HashCode hash = new();
@@ -214,10 +66,216 @@ namespace Moonlight.Types
             hash.Add(Underlined);
             hash.Add(Strikethrough);
             hash.Add(Obfuscated);
-            hash.Add(Color);
             hash.Add(Insertation);
             hash.Add(Extra);
+            hash.Add(Font);
+            hash.Add(Color);
+            hash.Add(HexColor);
             return hash.ToHashCode();
+        }
+
+        public void Parse(string text)
+        {
+            StringBuilder builder = new();
+            List<ChatComponent> extra = new();
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] is '§' or '&')
+                {
+                    if ((i + 1) >= text.Length)
+                    {
+                        builder.Append(text[i]);
+                        continue;
+                    }
+
+                    if (builder.Length != 0)
+                    {
+                        extra.Add(new ChatComponent(text[i..]));
+                        i = text.Length;
+                        break;
+                    }
+
+                    switch (text[i + 1])
+                    {
+                        case '&':
+                            builder.Append('&');
+                            break;
+                        case '@':
+                            if (i + 2 >= text.Length)
+                            {
+                                builder.Append('@');
+                                break;
+                            }
+
+                            switch (text[i + 2])
+                            {
+                                case '1':
+                                    SetFont(FontType.Default);
+                                    break;
+                                case '2':
+                                    SetFont(FontType.Uniform);
+                                    break;
+                                case '3':
+                                    SetFont(FontType.Alt);
+                                    break;
+                                default:
+                                    builder.Append('@');
+                                    builder.Append(text[i + 2]);
+                                    break;
+                            }
+                            i++;
+                            break;
+                        case 'k':
+                            Obfuscated = true;
+                            break;
+                        case 'l':
+                            Bold = true;
+                            break;
+                        case 'm':
+                            Strikethrough = true;
+                            break;
+                        case 'n':
+                            Underlined = true;
+                            break;
+                        case 'o':
+                            Italic = true;
+                            break;
+                        case 'r':
+                            Bold = false;
+                            Italic = false;
+                            Underlined = false;
+                            Strikethrough = false;
+                            Obfuscated = false;
+                            break;
+                        case '#':
+                            if ((i + 7) > text.Length)
+                            {
+                                goto default;
+                            }
+                            Color hexColor;
+                            if (ChatColors.IsValidHex(text.Substring(i + 1, 7)))
+                            {
+                                hexColor = ColorTranslator.FromHtml(text.Substring(i + 1, 7));
+                                Color = hexColor;
+                                i += 6;
+                                break;
+                            }
+                            else
+                            {
+                                goto default;
+                            }
+                        default:
+                            hexColor = ChatColors.GetColor(text[i + 1]);
+                            if (hexColor != Color.Empty)
+                            {
+                                Color = hexColor;
+                            }
+                            else
+                            {
+                                builder.Append(text[i]);
+                                builder.Append(text[i + 1]);
+                            }
+                            break;
+                    }
+                    i++;
+                }
+                else
+                {
+                    builder.Append(text[i]);
+                }
+            }
+
+            Text = builder.ToString();
+            Extra = extra.Count != 0 ? extra.ToArray() : null;
+        }
+
+        public string ToString(ColorParseMode colorParseMode = ColorParseMode.Translate, bool includeExtraComponents = true)
+        {
+            StringBuilder stringBuilder = new();
+            switch (colorParseMode)
+            {
+                case ColorParseMode.None:
+                    for (int i = 0; i < Text.Length; i++)
+                    {
+                        if (Text[i] == '§')
+                        {
+                            char c = Text[i + 1];
+                            // If c is between 0-f, or between k-r, skip it and continue.
+                            if (c is (>= '0' and <= '9') or (>= 'a' and <= 'f') or (>= 'k' and <= 'r'))
+                            {
+                                i++;
+                                continue;
+                            }
+                        }
+                        stringBuilder.Append(Text[i]);
+                    }
+
+                    if (includeExtraComponents)
+                    {
+                        if (Extra != null)
+                        {
+                            foreach (ChatComponent chatComponent in Extra)
+                            {
+                                stringBuilder.Append(chatComponent.ToString(colorParseMode, includeExtraComponents));
+                            }
+                        }
+                    }
+                    return stringBuilder.ToString();
+                case ColorParseMode.Legacy:
+                    stringBuilder.Append(ConvertPropertiesToSectionSigns());
+                    stringBuilder.Append(Text);
+                    if (includeExtraComponents)
+                    {
+                        if (Extra != null)
+                        {
+                            foreach (ChatComponent chatComponent in Extra)
+                            {
+                                stringBuilder.Append(chatComponent.ToString(colorParseMode, includeExtraComponents));
+                            }
+                        }
+                    }
+                    return stringBuilder.ToString();
+                case ColorParseMode.Translate:
+                    stringBuilder.Append('§');
+                    stringBuilder.Append(ChatColors.GetColorCode(ChatColors.GetClosestColor(ChatColors.GetColors(), Color)));
+                    goto case ColorParseMode.Legacy;
+                case ColorParseMode.Hex:
+                    throw new ArgumentException("Hex color codes cannot be translated to legacy formatting strings!");
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(colorParseMode), colorParseMode, $"Unsure how to handle {Enum.GetName(colorParseMode)} as it hasn't been implemented. Free PR available!");
+            }
+        }
+
+        private string ConvertPropertiesToSectionSigns()
+        {
+            StringBuilder stringBuilder = new();
+
+            if (Obfuscated)
+            {
+                stringBuilder.Append("§k");
+            }
+
+            if (Bold)
+            {
+                stringBuilder.Append("§l");
+            }
+
+            if (Strikethrough)
+            {
+                stringBuilder.Append("§m");
+            }
+
+            if (Underlined)
+            {
+                stringBuilder.Append("§n");
+            }
+
+            if (Italic)
+            {
+                stringBuilder.Append("§o");
+            }
+
+            return stringBuilder.ToString();
         }
     }
 }

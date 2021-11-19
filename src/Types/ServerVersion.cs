@@ -6,6 +6,9 @@ namespace Moonlight.Types
 {
     public class ServerVersion
     {
+        public const string CurrentName = "1.17.1";
+        public const int CurrentProtocol = 756;
+
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
@@ -15,7 +18,7 @@ namespace Moonlight.Types
         public ServerVersion()
         {
             Name = Program.Configuration.GetValue("server:name", "Moonlight 1.17.1");
-            Protocol = 756;
+            Protocol = CurrentProtocol;
         }
 
         public ServerVersion(string name, int protocol)
