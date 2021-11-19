@@ -38,7 +38,7 @@ namespace Moonlight
             return amount;
         }
 
-        public static string ToJson(this object obj) => JsonSerializer.Serialize(obj, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
+        public static string ToJson(this object obj, JsonSerializerOptions jsonSerializerOptions = null) => JsonSerializer.Serialize(obj, jsonSerializerOptions ?? new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 
         // Slightly modified from https://gist.github.com/ammaraskar/7b4a3f73bee9dc4136539644a0f27e63
         [SuppressMessage("Roslyn", "CA5350", Justification = "Minecraft protocol and Mojang Session Servers require a SHA1 hash.")]
