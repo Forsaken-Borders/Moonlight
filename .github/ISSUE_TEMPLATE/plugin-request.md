@@ -1,8 +1,8 @@
 ---
 name: Plugin Request
-about: Want a new plugin to be made for Moonlight? 
+about: Want a new plugin to be made for Moonlight?
 title: "[Plugin Request] "
-labels: 'Plugin Request'
+labels: Enhancement, Help Wanted, Plugin Request
 assignees: ''
 
 ---

@@ -1,8 +1,8 @@
 ---
 name: Dedicated Support
 about: You're a patient person who doesn't mind waiting an hour or two for support.
-title: ''
-labels: ''
+title: "[Support]"
+labels: Help Wanted, Support
 assignees: ''
 
 ---
