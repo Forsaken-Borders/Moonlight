@@ -37,7 +37,7 @@ namespace Moonlight.Types
         [JsonIgnore]
         public Color Color { get; set; }
         [JsonPropertyName("color"), SuppressMessage("Roslyn", "IDE0025", Justification = "Intentionally shadowing the property behind Color, but HexColor needs to be a public field due to STJ things.")]
-        public string HexColor { get => ColorTranslator.ToHtml(Color); }
+        public string HexColor { get => Color == Color.Transparent ? "reset" : ColorTranslator.ToHtml(Color); }
 
         public ChatComponent(string text, bool parse = true)
         {
@@ -141,11 +141,7 @@ namespace Moonlight.Types
                             Italic = true;
                             break;
                         case 'r':
-                            Bold = false;
-                            Italic = false;
-                            Underlined = false;
-                            Strikethrough = false;
-                            Obfuscated = false;
+                            Color = Color.Transparent;
                             break;
                         case '#':
                             if ((i + 7) > text.Length)

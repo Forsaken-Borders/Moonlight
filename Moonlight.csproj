@@ -17,5 +17,6 @@
         <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     </ItemGroup>
 </Project>

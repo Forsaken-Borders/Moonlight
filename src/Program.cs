@@ -10,6 +10,7 @@ using Moonlight.Logging;
 using Moonlight.Network;
 using Serilog;
 using Serilog.Events;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace Moonlight
 {
@@ -76,6 +77,11 @@ namespace Moonlight
                 cancellationTokenSource.Cancel();
                 Logger.Information("Shutdown requested! Shutting down...");
             };
+
+            SixLabors.ImageSharp.Configuration.Default.ImageFormatsManager.SetEncoder(PngFormat.Instance, new PngEncoder()
+            {
+                CompressionLevel = PngCompressionLevel.BestCompression
+            });
 
             Logger.Information("Server started!");
             await new ServerListener().StartAsync(cancellationTokenSource.Token);

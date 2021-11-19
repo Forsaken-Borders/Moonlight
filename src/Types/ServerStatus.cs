@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Processing;
 
 namespace Moonlight.Types
 {
@@ -41,7 +44,13 @@ namespace Moonlight.Types
         public static string GetFavicon()
         {
             string serverIconPath = FileUtils.GetConfigPath() + "server_icon.png";
-            return File.Exists(serverIconPath) ? "data:image/png;base64," + Convert.ToBase64String(File.ReadAllBytes(serverIconPath)) : null;
+            if (!File.Exists(serverIconPath))
+            {
+                return null;
+            }
+            Image serverIcon = Image.Load(serverIconPath);
+            serverIcon.Mutate(image => image.Resize(64, 64));
+            return serverIcon.ToBase64String(PngFormat.Instance);
         }
 
         public override bool Equals(object obj) => obj is ServerStatus status && EqualityComparer<ChatComponent>.Default.Equals(Description, status.Description) && EqualityComparer<ServerVersion>.Default.Equals(Version, status.Version) && EqualityComparer<ServerPlayers>.Default.Equals(Players, status.Players) && Favicon == status.Favicon;
