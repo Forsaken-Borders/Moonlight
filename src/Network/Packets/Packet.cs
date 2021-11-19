@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json.Serialization;
 
 namespace Moonlight.Network.Packets
@@ -31,8 +32,14 @@ namespace Moonlight.Network.Packets
         }
 
         public virtual int CalculateLength() => Id.GetVarIntLength() + (Data?.Length ?? 0);
-        public override bool Equals(object obj) => obj is Packet packet && Id == packet.Id && EqualityComparer<byte[]>.Default.Equals(Data, packet.Data);
-        public override int GetHashCode() => HashCode.Combine(Id, Data);
+        public virtual void UpdateData()
+        {
+            using PacketHandler packetHandler = new(new MemoryStream());
+            packetHandler.WriteVarInt(CalculateLength());
+            packetHandler.WriteVarInt(Id);
+            packetHandler.Stream.Position = 0;
+            Data = packetHandler.ReadNextPacket().Data;
+        }
 
         public static bool operator ==(Packet packet1, Packet packet2)
         {
@@ -48,5 +55,7 @@ namespace Moonlight.Network.Packets
         }
 
         public static bool operator !=(Packet packet1, Packet packet2) => !(packet1 == packet2);
+        public override bool Equals(object obj) => obj is Packet packet && Id == packet.Id && EqualityComparer<byte[]>.Default.Equals(Data, packet.Data);
+        public override int GetHashCode() => HashCode.Combine(Id, Data);
     }
 }

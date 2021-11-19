@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Moonlight.Types;
 
 namespace Moonlight.Network.Packets
@@ -14,10 +12,15 @@ namespace Moonlight.Network.Packets
         {
             ArgumentNullException.ThrowIfNull(payload, nameof(payload));
             Payload = payload;
+            UpdateData();
+        }
+
+        public override void UpdateData()
+        {
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
             packetHandler.WriteVarInt(Id);
-            packetHandler.WriteString(JsonSerializer.Serialize(payload, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }));
+            packetHandler.WriteString(Payload.ToJson());
             packetHandler.Stream.Position = 0;
             Data = packetHandler.ReadNextPacket().Data;
         }

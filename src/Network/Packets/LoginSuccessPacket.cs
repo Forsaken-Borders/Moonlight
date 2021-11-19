@@ -15,12 +15,16 @@ namespace Moonlight.Network.Packets
             ArgumentNullException.ThrowIfNull(mojangSessionServerResponse, nameof(mojangSessionServerResponse));
             UUID = Guid.Parse(mojangSessionServerResponse.Id);
             Username = mojangSessionServerResponse.Name;
+            UpdateData();
+        }
 
+        public override void UpdateData()
+        {
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
             packetHandler.WriteVarInt(Id);
-            packetHandler.WriteString(mojangSessionServerResponse.Id.ToString());
-            packetHandler.WriteString(mojangSessionServerResponse.Name);
+            packetHandler.WriteString(UUID.ToString());
+            packetHandler.WriteString(Username);
             packetHandler.Stream.Position = 0;
             Data = packetHandler.ReadNextPacket().Data;
         }
