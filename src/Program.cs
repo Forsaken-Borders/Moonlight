@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -33,8 +32,8 @@ namespace Moonlight
              */
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.Sources.Clear(); // Remove the default configuration sources.
-            configurationBuilder.AddYamlFile(GetSourceFilePathName() + "../../../res/config.yml", true, true);
-            configurationBuilder.AddJsonFile(GetSourceFilePathName() + "../../../res/config.json", true, true);
+            configurationBuilder.AddYamlFile(FileUtils.GetConfigPath() + "config.yml", true, true);
+            configurationBuilder.AddJsonFile(FileUtils.GetConfigPath() + "config.json", true, true);
             configurationBuilder.AddEnvironmentVariables("MOONLIGHT_");
             configurationBuilder.AddCommandLine(args);
             Configuration = configurationBuilder.Build();
@@ -81,7 +80,5 @@ namespace Moonlight
             Logger.Information("Server started!");
             await new ServerListener().StartAsync(cancellationTokenSource.Token);
         }
-
-        private static string GetSourceFilePathName([CallerFilePath] string callerFilePath = null) => string.IsNullOrEmpty(callerFilePath) ? "" : callerFilePath;
     }
 }
