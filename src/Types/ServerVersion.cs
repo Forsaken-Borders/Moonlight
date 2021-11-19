@@ -17,7 +17,7 @@ namespace Moonlight.Types
 
         public ServerVersion()
         {
-            Name = Program.Configuration.GetValue("server:name", "Moonlight 1.17.1");
+            Name = Server.Configuration.GetValue("server:name", "Moonlight 1.17.1");
             Protocol = CurrentProtocol;
         }
 

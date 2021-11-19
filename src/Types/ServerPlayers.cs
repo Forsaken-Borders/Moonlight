@@ -18,7 +18,7 @@ namespace Moonlight.Types
 
         public ServerPlayers()
         {
-            MaxPlayerCount = Program.Configuration.GetValue("server:max_players", 100);
+            MaxPlayerCount = Server.Configuration.GetValue("server:max_players", 100);
             OnlinePlayerCount = 0;
             SamplePlayers = new();
         }

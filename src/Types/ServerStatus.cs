@@ -25,7 +25,7 @@ namespace Moonlight.Types
 
         public ServerStatus()
         {
-            Description = new(Program.Configuration.GetValue("server:description", "Moonlight: a C# implementation of the Minecraft Server Protocol."));
+            Description = new(Server.Configuration.GetValue("server:description", "Moonlight: a C# implementation of the Minecraft Server Protocol."));
             Version = new();
             Players = new();
         }

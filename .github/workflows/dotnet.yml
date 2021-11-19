@@ -16,13 +16,25 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
+      - name: Build Windows
+        run: dotnet publish -c Release -r win-x64 --self-contained
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: Moonlight-Nightly-Build
-          path: /home/runner/work/Moonlight/Moonlight/bin/Debug/net6.0/
+          name: Moonlight_Windows_Nightly
+          path: /home/runner/work/Moonlight/Moonlight/bin/Release/net6.0/win-x64/
+      - name: Build OSX
+        run: dotnet publish -c Release -r osx-x64 --self-contained
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: Moonlight_OSX_Nightly
+          path: /home/runner/work/Moonlight/Moonlight/bin/Release/net6.0/osx-x64/
+      - name: Build Linux
+        run: dotnet publish -c Release -r linux-x64 --self-contained
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: Moonlight_Windows_Nightly
+          path: /home/runner/work/Moonlight/Moonlight/bin/Release/net6.0/linux-x64/
         if: ${{ github.event_name == 'push' }}

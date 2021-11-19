@@ -21,7 +21,7 @@ namespace Moonlight.Network
     {
         public PacketHandler PacketHandler { get; init; }
         public bool LocalhostConnection { get; init; }
-        private ILogger Logger { get; init; } = Program.Logger.ForContext<MinecraftClient>();
+        private ILogger Logger { get; init; } = Server.Logger.ForContext<MinecraftClient>();
         private CancellationToken CancellationToken { get; init; }
 
         public MinecraftClient(Stream stream, bool localhostConnection, CancellationToken cancellationToken)
@@ -86,7 +86,7 @@ namespace Moonlight.Network
 
             CancellationToken.Register(() =>
             {
-                Disconnect(Program.Configuration.GetValue("server:shutdown_message", "The server is shutting down!"));
+                Disconnect(Server.Configuration.GetValue("server:shutdown_message", "The server is shutting down!"));
                 Dispose();
             });
         }

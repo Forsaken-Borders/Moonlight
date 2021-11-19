@@ -14,7 +14,7 @@ using SixLabors.ImageSharp.Formats.Png;
 
 namespace Moonlight
 {
-    internal class Program
+    public class Server
     {
         internal static IConfiguration Configuration { get; set; }
         internal static IServiceProvider ServiceProvider { get; set; }
@@ -55,7 +55,7 @@ namespace Moonlight
                 }
 
                 loggerConfiguration.WriteTo.File($"logs/{DateTime.Now.ToUniversalTime().ToString("yyyy'-'MM'-'dd' 'HH'_'mm'_'ss", CultureInfo.InvariantCulture)}.log", rollingInterval: Configuration.GetValue("logging:rolling_interval", RollingInterval.Day), outputTemplate: Configuration.GetValue("logging:format", "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u4}] [{ThreadId}] {SourceContext}: {Message:lj}{NewLine}{Exception}"));
-                Log.Logger = loggerConfiguration.CreateLogger();
+                Log.Logger = loggerConfiguration.CreateLogger().ForContext<Server>();
 
                 loggingBuilder.ClearProviders();
 
@@ -84,7 +84,11 @@ namespace Moonlight
             });
 
             Logger.Information("Server started!");
-            await new ServerListener().StartAsync(cancellationTokenSource.Token);
+            try
+            {
+                await new ServerListener().StartAsync(cancellationTokenSource.Token);
+            }
+            catch (TaskCanceledException) { } // Silently ignore.
         }
     }
 }
