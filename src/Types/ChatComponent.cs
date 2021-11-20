@@ -100,6 +100,9 @@ namespace Moonlight.Types
                         case '&':
                             builder.Append('&');
                             break;
+                        case '§':
+                            builder.Append('§');
+                            break;
                         case '@':
                             if (i + 2 >= text.Length)
                             {

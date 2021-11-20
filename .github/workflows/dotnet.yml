@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-    if: "!contains(toJSON(github.event.commits.*.message), '[no-ci]')"
+    if: "!contains(toJSON(github.event.commits.*.message), '[ci-skip]')"
 
     steps:
       - uses: actions/checkout@v2

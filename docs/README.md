@@ -1,0 +1,1 @@
+Refer to the [Wiki](https://github.com/Forsaken-Borders/Moonlight/wiki).
