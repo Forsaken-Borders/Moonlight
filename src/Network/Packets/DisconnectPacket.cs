@@ -1,5 +1,5 @@
 using System.IO;
-using Moonlight.Types;
+using Moonlight.Types.Chat;
 
 namespace Moonlight.Network.Packets
 {
@@ -9,11 +9,17 @@ namespace Moonlight.Network.Packets
 
         public DisconnectPacket(ChatComponent reason)
         {
-            Reason = reason ?? "Disconnected for an unknown reason.";
+            Reason = reason ?? "&cDisconnected for an unknown reason.";
+            reason.Text = reason.ToString();
+            UpdateData();
+        }
+
+        public override void UpdateData()
+        {
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
             packetHandler.WriteVarInt(Id);
-            packetHandler.WriteString(reason.ToJson());
+            packetHandler.WriteString(Reason.ToJson());
             packetHandler.Stream.Position = 0;
             Data = packetHandler.ReadNextPacket().Data;
         }

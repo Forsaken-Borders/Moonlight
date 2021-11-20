@@ -42,7 +42,7 @@ namespace Moonlight
                 configFile.Dispose();
             }
 
-            Log.Information("Config file created.");
+            Log.Information("Config file created, please fill it out when you get the chance.");
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Moonlight.Types
+namespace Moonlight.Types.ServerPing
 {
     public class SamplePlayer
     {

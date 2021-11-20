@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace Moonlight.Types
+namespace Moonlight.Types.Chat
 {
     public enum ColorParseMode
     {

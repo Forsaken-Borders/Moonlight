@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 
-namespace Moonlight.Types
+namespace Moonlight.Types.ServerPing
 {
     public class ServerPlayers
     {

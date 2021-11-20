@@ -20,7 +20,11 @@ namespace Moonlight.Network.Packets
 
             PublicKey = publicKey;
             VerifyToken = verifyToken;
+            UpdateData();
+        }
 
+        public override void UpdateData()
+        {
             using PacketHandler packetHandler = new(new MemoryStream());
             packetHandler.WriteVarInt(CalculateLength());
             packetHandler.WriteVarInt(Id);

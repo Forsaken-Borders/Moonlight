@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Linq;
 
-namespace Moonlight.Types
+namespace Moonlight.Types.Chat
 {
     public static class ChatColors
     {

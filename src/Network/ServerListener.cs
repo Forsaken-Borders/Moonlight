@@ -8,7 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Moonlight.Network.Packets;
-using Moonlight.Types;
+using Moonlight.Types.Chat;
+using Moonlight.Types.ServerPing;
 using Serilog;
 
 namespace Moonlight.Network
@@ -137,7 +138,7 @@ namespace Moonlight.Network
                         }
                         else
                         {
-                            packetHandler.WritePacket(new DisconnectPacket(Server.Configuration.GetValue("server:invalid_protocol_message", "You must be on version 1.17.1!")));
+                            packetHandler.WritePacket(new DisconnectPacket(Server.Configuration.GetValue("server:invalid_protocol_message", "&cYou must be on version 1.17.1!")));
                             Logger.Verbose("{ipAddress} is using an unsupported protocol version: {protocolVersion}. Disconnect Packet Sent,\n\tReason: {invalidProtocolMessage}", (tcpClient.Client.RemoteEndPoint as IPEndPoint)?.Address.ToString() ?? "An unknown ip", handshakePacket.ProtocolVersion, Server.Configuration.GetValue("server:invalid_protocol_message", "You must be on version 1.17.1!"));
                             packetHandler.Dispose();
                             tcpClient.Dispose();

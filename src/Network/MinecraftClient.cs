@@ -13,6 +13,7 @@ using System.Web;
 using Microsoft.Extensions.Configuration;
 using Moonlight.Network.Packets;
 using Moonlight.Types;
+using Moonlight.Types.Chat;
 using Serilog;
 
 namespace Moonlight.Network

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using Moonlight.Types.Chat;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.Processing;
 
-namespace Moonlight.Types
+namespace Moonlight.Types.ServerPing
 {
     public class ServerStatus
     {

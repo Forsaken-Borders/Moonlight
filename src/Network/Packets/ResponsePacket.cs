@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Moonlight.Types;
+using Moonlight.Types.ServerPing;
 
 namespace Moonlight.Network.Packets
 {
