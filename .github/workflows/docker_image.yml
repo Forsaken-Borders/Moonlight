@@ -35,5 +35,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/forsaken_borders/moonlight:latest
-            ghcr.io/forsaken_borders/moonlight:${{ steps.previoustag.outputs.tag }}
+            ghcr.io/forsaken-borders/moonlight:latest
+            ghcr.io/forsaken-borders/moonlight:${{ steps.previoustag.outputs.tag }}
