@@ -22,6 +22,8 @@ namespace Moonlight
 
         public static async Task Main(string[] args)
         {
+            FileUtils.CreateDefaultConfig();
+
             /* Use the ASP.NET Core configuration library to load up either a yml or json file.
              * We are intentionally loading things in the following order:
              * - Yml config
