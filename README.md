@@ -19,6 +19,9 @@ It is planned, but not currently supported. This will be updated when this chang
 ## Does Moonlight have mod support?
 Mod development is not directly supported. We may go slightly out of our way to make it easier to add support, we do not make Moonlight with mod support in mind. A fork of Moonlight is expected to happen if you want mod support. If you wish to PR mod support into Moonlight, the PR will be highly considered.
 
+## How do I set it up?
+Refer to the [Wiki](https://github.com/Forsaken-Borders/Moonlight/wiki), which is where all of our official documentation is.
+
 ## Why is Moonlight being developed?
 Moonlight was started because the Minecraft Server that Mojang hands out is too resource intensive. The Bukkit/Spigot/Paper API is also very confusing, full of obselete methods or 20 other ways to do the same task. C# was originally made to replace Java's mistakes, and the same concept applies to Moonlight: To fix Mojang's server software mistakes.  
 
