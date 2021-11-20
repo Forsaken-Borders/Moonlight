@@ -41,6 +41,8 @@ namespace Moonlight
                 configFile.Write(buffer);
                 configFile.Dispose();
             }
+
+            Log.Information("Config file created.");
         }
     }
 }
