@@ -1,17 +1,16 @@
 using System;
 using System.Text.Json.Serialization;
 
-namespace Moonlight.Types.ServerPing
+namespace Moonlight.Types.ServerPing;
+
+public class SamplePlayer
 {
-    public class SamplePlayer
-    {
-        [JsonPropertyName("id")]
-        public Guid Id { get; init; }
+    [JsonPropertyName("id")]
+    public Guid Id { get; init; }
 
-        [JsonPropertyName("name")]
-        public string Name { get; init; }
+    [JsonPropertyName("name")]
+    public string Name { get; init; }
 
-        public override bool Equals(object obj) => obj is SamplePlayer player && Id.Equals(player.Id) && Name == player.Name;
-        public override int GetHashCode() => HashCode.Combine(Id, Name);
-    }
+    public override bool Equals(object obj) => obj is SamplePlayer player && Id.Equals(player.Id) && Name == player.Name;
+    public override int GetHashCode() => HashCode.Combine(Id, Name);
 }
