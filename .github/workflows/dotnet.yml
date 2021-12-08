@@ -18,24 +18,24 @@ jobs:
         with:
           dotnet-version: 6.0.x
       - name: Build Windows
-        run: dotnet publish -c Debug -r win-x64 --self-contained
+        run: dotnet publish src/Moonlight -c Debug -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Moonlight_Windows_Nightly
-          path: /srv/moonlight_actions_runner/_work/Moonlight/Moonlight/bin/Debug/net6.0/win-x64/publish
+          path: /srv/moonlight_actions_runner/_work/Moonlight/Moonlight/src/Moonlight/bin/Debug/net6.0/win-x64/publish
       - name: Build OSX
-        run: dotnet publish -c Debug -r osx-x64 --self-contained
+        run: dotnet publish src/Moonlight -c Debug -r osx-x64 --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded
       - name: Upload OSX Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Moonlight_OSX_Nightly
-          path: /srv/moonlight_actions_runner/_work/Moonlight/Moonlight/bin/Debug/net6.0/osx-x64/publish
+          path: /srv/moonlight_actions_runner/_work/Moonlight/Moonlight/src/Moonlight/bin/Debug/net6.0/osx-x64/publish
       - name: Build Linux
-        run: dotnet publish -c Debug -r linux-x64 --self-contained
+        run: dotnet publish src/Moonlight -c Debug -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
           name: Moonlight_Linux_Nightly
-          path: /srv/moonlight_actions_runner/_work/Moonlight/Moonlight/bin/Debug/net6.0/linux-x64/publish
+          path: /srv/moonlight_actions_runner/_work/Moonlight/Moonlight/src/Moonlight/bin/Debug/net6.0/linux-x64/publish
         if: ${{ github.event_name == 'push' }}
