@@ -28,5 +28,5 @@ Moonlight was started because the Minecraft Server that Mojang hands out is too 
 ## Got a Discord Server?
 Our whole orginzation does: [Forsaken Borders Discord Server](https://discord.gg/Bsv7zSFygc), checkout the #moonlight channel.
 
-## Legal Notes
-MOONLIGHT IS NOT AN OFFICIAL MINECRAFT PRODUCT. MOONLIGHT IS NOT APPROVED BY OR ASSOCIATED WITH MOJANG.
+## Disclaimer
+Moonlight is unofficial Minecraft server software and is not associated with Mojang or Microsoft. Minecraft™ is a registered trademark of Mojang AB.
