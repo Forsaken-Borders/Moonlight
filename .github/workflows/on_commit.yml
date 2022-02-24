@@ -1,0 +1,83 @@
+name: "On Commit"
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_moonlight:
+    name: "Build Moonlight"
+    runs-on: "self-hosted"
+    if: "!contains(toJSON(github.event.commits.*.message), '[ci-skip]')"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Setup .NET"
+        uses: "actions/setup-dotnet@v1"
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: "Prepare Environment"
+        run: |
+          "dotnet restore --no-cache"
+          "mkdir src/Moonlight/build"
+
+      - name: "Build Windows"
+        run: |
+          "dotnet publish src/Moonlight -c Debug -r win-x64 --version-suffix='-nightly-${{ github.run_number }}-win' --nologo --no-restore --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded"
+          "zip -r -9 src/Moonlight/build/Moonlight-Nightly-${{ github.run_number }}-Win.zip src/Moonlight/bin/Debug/net6.0/win-x64/publish"
+
+      - name: "Upload Window's Artifact"
+        uses: "actions/upload-artifact@v2.2.4"
+        with:
+          name: "Moonlight-Nightly-${{ github.run_number }}-Windows.zip"
+          path: "src/Moonlight/build/Moonlight-Nightly-${{ github.run_number }}-Win.zip"
+
+      - name: "Build OSX"
+        run: |
+          "dotnet publish src/Moonlight -c Debug -r osx-x64 --version-suffix='-nightly-${{ github.run_number }}-osx' --nologo --no-restore --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded"
+          "zip -r -9 src/Moonlight/build/Moonlight-Nightly-${{ github.run_number }}-OSX.zip src/Moonlight/bin/Debug/net6.0/osx-x64/publish"
+      - name: "Upload OSX's Artifact"
+        uses: "actions/upload-artifact@v2.2.4"
+        with:
+          name: "Moonlight-Nightly-${{ github.run_number }}-OSX.zip"
+          path: "src/Moonlight/build/Moonlight-Nightly-${{ github.run_number }}-OSX.zip"
+
+      - name: "Build Linux"
+        run: |
+          "dotnet publish src/Moonlight -c Debug -r linux-x64 --version-suffix='-nightly-${{ github.run_number }}-linux' --nologo --no-restore --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded"
+          "zip -r -9 src/Moonlight/build/Moonlight-Nightly-${{ github.run_number }}-Linux.zip src/Moonlight/bin/Debug/net6.0/linux-x64/publish"
+      - name: "Upload Linux's Artifact"
+        uses: "actions/upload-artifact@v2.2.4"
+        with:
+          name: "Moonlight-Nightly-${{ github.run_number }}-Linux.zip"
+          path: "src/Moonlight/build/Moonlight-Nightly-${{ github.run_number }}-Linux.zip"
+  build_moonlight_api:
+    name: "Build Moonlight.API"
+    runs-on: "self-hosted"
+    if: "!contains(toJSON(github.event.commits.*.message), '[ci-skip]')"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Setup .NET"
+        uses: "actions/setup-dotnet@v1"
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: "Build Nightly Nuget Packages"
+        run: |
+          "cd src/Moonlight.Api"
+          "mkdir build"
+          "dotnet pack -p:SymbolPackageFormat=snupkg --include-symbols --include-source -o build -p:VersionSuffix='nightly-${{ github.run_number }}'"
+          "zip -r -9 Moonlight.Api-Nightly-${{ github.run_number }}.zip build/*"
+
+      - name: "Publish Nightly Nuget Packages"
+        run: "dotnet nuget push 'Moonlight.Api-Nightly-${{ github.run_number }}.zip' -k ${{ secrets.NUGET_ORG_API_KEY }} -s https://api.nuget.org/v3/index.json" # If the package version does not comply with SemVer, it will be set as a pre-release version automatically.
+
+      - name: "Upload Moonlight.Api Nuget File"
+        uses: "actions/upload-artifact@v2.2.4"
+        with:
+          name: "Moonlight.Api-Nightly-${{ github.run_number }}.zip"
+          path: "build/Moonlight.Api-Nightly-${{ github.run_number }}.zip"

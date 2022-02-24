@@ -1,0 +1,115 @@
+name: "Publish Release"
+on:
+  release:
+    types: ["published"]
+
+jobs:
+  build_executables:
+    name: "Build Executables"
+    runs-on: "self-hosted"
+    if: "!contains(toJSON(github.event.commits.*.message), '[ci-skip]')"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Setup .NET"
+        uses: "actions/setup-dotnet@v1"
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: "Prepare Environment"
+        run: |
+         "dotnet restore --no-cache"
+         "mkdir build"
+
+      - name: "Build Windows"
+        run: |
+          "dotnet publish src/Moonlight -c Release -r win-x64 --nologo --no-restore --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded"
+          "cp src/Moonlight/bin/Release/net6.0/win-x64/publish/Moonlight.exe build/Moonlight-${{ github.ref_name }}.exe"
+
+      - name: "Build OSX"
+        run: |
+          "dotnet publish src/Moonlight -c Release -r osx-x64 --nologo --no-restore --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded"
+          "cp src/Moonlight/bin/Release/net6.0/osx-x64/publish/Moonlight build/Moonlight-${{ github.ref_name }}-OSX"
+
+      - name: "Build Linux"
+        run: |
+          "dotnet publish src/Moonlight -c Release -r linux-x64 --nologo --no-restore --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:EnableCompressionInSingleFile=true -p:DebugType=embedded"
+          "cp src/Moonlight/bin/Release/net6.0/linux-x64/publish/Moonlight build/Moonlight-${{ github.ref_name }}-Linux"
+
+      - name: "Upload Nuget Packages To Github Release"
+        uses: "ncipollo/release-action@v1"
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: "build/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          omitNameDuringUpdate: true # We don't want to update the name of the release.
+          omitBodyDuringUpdate: true # We don't want to update the body of the release.
+
+  build_moonlight_api:
+    name: "Build Moonlight.API"
+    runs-on: "self-hosted"
+    if: "!contains(toJSON(github.event.commits.*.message), '[ci-skip]')"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Setup .NET"
+        uses: "actions/setup-dotnet@v1"
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: "Build Nightly Nuget Packages"
+        run: |
+          "cd src/Moonlight.Api"
+          "mkdir build"
+          "dotnet pack -p:SymbolPackageFormat=snupkg --include-symbols --include-source -o build"
+
+      - name: "Publish Nightly Nuget Packages"
+        run: "dotnet nuget push 'build/*' -k ${{ secrets.NUGET_ORG_API_KEY }} -s https://api.nuget.org/v3/index.json" # If the package version does not comply with SemVer, it will be set as a pre-release version automatically.
+
+      - name: "Upload Nuget Packages To Github Release"
+        uses: "ncipollo/release-action@v1"
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: "build/*"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          omitNameDuringUpdate: true # We don't want to update the name of the release.
+          omitBodyDuringUpdate: true # We don't want to update the body of the release.
+
+  build_docker_image:
+    name: "Build Docker Image"
+    runs-on: "self-hosted"
+    if: "!contains(toJSON(github.event.commits.*.message), '[ci-skip]')"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Get Latest Tag"
+        uses: "WyriHaximus/github-action-get-previous-tag@master"
+        id: previoustag
+
+      - name: "Set Up QEMU"
+        uses: "docker/setup-qemu-action@v1"
+
+      - name: "Set Up Docker Buildx"
+        uses: "docker/setup-buildx-action@v1"
+
+      - name: "Login To DockerHub"
+        uses: "docker/login-action@v1"
+        with:
+          registry: "ghcr.io"
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Build And Push"
+        uses: "docker/build-push-action@v2"
+        with:
+          context: .
+          file: "./Dockerfile"
+          push: true
+          tags: |
+            "ghcr.io/forsaken-borders/moonlight:latest"
+            "ghcr.io/forsaken-borders/moonlight:${{ steps.previoustag.outputs.tag }}"

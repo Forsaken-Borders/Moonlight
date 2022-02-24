@@ -10,24 +10,19 @@ assignees: ''
 <!-- These are HTML comments, meaning they won't show up when you create the issue. When you're filling out the issue, just delete the comment itself, as they're intended to be examples. -->
 
 ## The problem at hand
-
 <!-- How do I use the Docker image? -->
 
 ## What you've tried
-
-<!-- Installing `dotnet` then `dotnet run` -->
+<!-- Installing `dotnet` then `dotnet run`. -->
 
 ## Platform details
-
 <!--
-- Windows 10, 64bit
-- Dotnet 5.0
+- Windows 11, 64bit
+- Dotnet 6.0
 -->
 
 ## Any error messages?
-
-<!-- None -->
+<!-- None. -->
 
 ## Personal notes
-
-<!-- I'm new to Docker in general -->
+<!-- I'm new to Docker in general. -->
