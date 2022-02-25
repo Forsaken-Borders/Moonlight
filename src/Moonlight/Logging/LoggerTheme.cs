@@ -1,8 +1,8 @@
+using Serilog.Sinks.SystemConsole.Themes;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Serilog.Sinks.SystemConsole.Themes;
 
 namespace Moonlight.Logging
 {
@@ -65,7 +65,7 @@ namespace Moonlight.Logging
         /// <inheritdoc/>
         public override int Set(TextWriter output, ConsoleThemeStyle style)
         {
-            if (_styles.TryGetValue(style, out string ansiStyle))
+            if (_styles.TryGetValue(style, out string? ansiStyle) && !string.IsNullOrWhiteSpace(ansiStyle))
             {
                 output.Write(ansiStyle);
                 return ansiStyle.Length;

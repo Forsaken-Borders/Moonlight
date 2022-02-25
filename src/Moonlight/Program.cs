@@ -1,26 +1,24 @@
-﻿using System;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Yaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moonlight.Api;
-using Moonlight.Api.Types;
 using Moonlight.Logging;
-using Moonlight.Network;
+using Moonlight.Server.Networking;
 using Serilog;
 using Serilog.Events;
 using SixLabors.ImageSharp.Formats.Png;
+using System;
+using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Moonlight
 {
     public class Program
     {
-        internal static IConfiguration Configuration { get; private set; }
-        internal static IServiceProvider ServiceProvider { get; set; }
-        internal static Serilog.ILogger Logger { get; private set; }
+        internal static IConfiguration Configuration { get; private set; } = null!;
+        internal static IServiceProvider ServiceProvider { get; set; } = null!;
+        internal static Serilog.ILogger Logger { get; private set; } = null!;
 
         public static async Task Main(string[] args)
         {
@@ -36,10 +34,12 @@ namespace Moonlight
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.Sources.Clear(); // Remove the default configuration sources.
 
-            FileUtils<Program> fileUtils = new("", Logger);
-            fileUtils.CreateDefaultConfig();
-            configurationBuilder.AddYamlFile(fileUtils.GetConfigPath() + "config.yml", true, true);
-            configurationBuilder.AddJsonFile(fileUtils.GetConfigPath() + "config.json", true, true);
+            //IFileHandler<Program> fileHandler = null;
+            //fileHandler.CreateDefaultConfig();
+            //configurationBuilder.AddYamlFile(fileHandler.GetConfigPath() + "config.yml", true, true);
+            //configurationBuilder.AddJsonFile(fileHandler.GetConfigPath() + "config.json", true, true);
+            configurationBuilder.AddYamlFile("res/config.yml", true, true);
+            configurationBuilder.AddJsonFile("res/config.json", true, true);
             configurationBuilder.AddEnvironmentVariables("MOONLIGHT_");
             configurationBuilder.AddCommandLine(args);
             Configuration = configurationBuilder.Build();
@@ -71,7 +71,7 @@ namespace Moonlight
 
             // TODO: When either the plugin API system is implemented, or a complicated server config arises, add database support. See [issue #1](https://github.com/Forsaken-Borders/Moonlight/issues/1) for more information.
 
-            // I considered injecting a CancellationToken singleton here, which would be fired when Ctrl+C is pressed. After chit-chatting with Velvet, I was convinced that it'd be better to just create a Server Shutdown event instead. Internal classes will use the CancellationToken, while plugins will use the event.
+            // I considered injecting a CancellationTokenSource singleton here, which would be fired when Ctrl+C is pressed. After chit-chatting with Velvet, I was convinced that it'd be better to just create a Server Shutdown event instead. Internal classes will use the CancellationToken, while plugins will use the event.
             ServiceProvider = services.BuildServiceProvider();
             Logger = Log.Logger;
             //MinecraftAPI.HttpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("Moonlight/0.2.0");
@@ -88,11 +88,10 @@ namespace Moonlight
                 CompressionLevel = PngCompressionLevel.BestCompression
             });
 
-            Server.Init(Configuration, Logger);
             Logger.Information("Server started!");
             try
             {
-                await new ServerListener().StartAsync(cancellationTokenSource.Token);
+                await new ServerListener(Logger.ForContext<ServerListener>(), Configuration).StartAsync(cancellationTokenSource.Token);
             }
             catch (TaskCanceledException) { } // Silently ignore.
         }
