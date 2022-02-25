@@ -1,5 +1,5 @@
 using Moonlight.Api.Minecraft.Abstractions.Chat;
-using System.Diagnostics.CodeAnalysis;
+using Moonlight.Api.Server.JsonConverters;
 using System.Drawing;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -17,11 +17,11 @@ namespace Moonlight.Api.Minecraft.Objects.Chat
         public string? Insertation { get; set; }
         public IChatComponent[]? Extra { get; set; }
         public string? Font { get; set; }
+        [JsonConverter(typeof(ColorJsonConverter))]
+        public Color Color { get; set; }
 
         [JsonIgnore]
-        public Color Color { get; set; }
-        [JsonPropertyName("color"), SuppressMessage("Roslyn", "IDE0025", Justification = "Intentionally shadowing the property behind Color, but HexColor needs to be a public field due to STJ things.")]
-        public string HexColor { get => Color == Color.Transparent || Color.IsEmpty ? "reset" : ColorTranslator.ToHtml(Color); }
+        public string HexColor => (Color == Color.Transparent || Color.IsEmpty) ? "reset" : ColorTranslator.ToHtml(Color);
 
         public ChatComponent(string text, bool parse = true)
         {

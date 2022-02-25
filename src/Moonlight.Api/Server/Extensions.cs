@@ -1,3 +1,4 @@
+using Moonlight.Api.Server.JsonConverters;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
@@ -15,7 +16,7 @@ namespace Moonlight.Api.Server
         /// <param name="obj">The object to JSONify.</param>
         /// <param name="jsonSerializerOptions">The JsonSerializerOptions. Defaults to camelCase and ignores null values.</param>
         /// <returns>A JSON string of the object.</returns>
-        public static string ToJson(this object obj, JsonSerializerOptions? jsonSerializerOptions = null) => JsonSerializer.Serialize(obj, jsonSerializerOptions ?? new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
+        public static string ToJson(this object obj, JsonSerializerOptions? jsonSerializerOptions = null) => JsonSerializer.Serialize(obj, jsonSerializerOptions ?? new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Converters = { new ColorJsonConverter() } });
 
         /// <summary>
         /// Get's the variable length of an object. This is used when sending packets.

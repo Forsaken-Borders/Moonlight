@@ -2,8 +2,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Yaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moonlight.Logging;
+using Moonlight.Server.Logging;
 using Moonlight.Server.Networking;
+using Moonlight.Server.Objects;
 using Serilog;
 using Serilog.Events;
 using SixLabors.ImageSharp.Formats.Png;
@@ -34,12 +35,10 @@ namespace Moonlight
             ConfigurationBuilder configurationBuilder = new();
             configurationBuilder.Sources.Clear(); // Remove the default configuration sources.
 
-            //IFileHandler<Program> fileHandler = null;
-            //fileHandler.CreateDefaultConfig();
-            //configurationBuilder.AddYamlFile(fileHandler.GetConfigPath() + "config.yml", true, true);
-            //configurationBuilder.AddJsonFile(fileHandler.GetConfigPath() + "config.json", true, true);
-            configurationBuilder.AddYamlFile("res/config.yml", true, true);
-            configurationBuilder.AddJsonFile("res/config.json", true, true);
+            FileHandler fileHandler = new();
+            fileHandler.CreateDefaultConfig();
+            configurationBuilder.AddYamlFile(fileHandler.GetConfigPath() + "config.yml", true, true);
+            configurationBuilder.AddJsonFile(fileHandler.GetConfigPath() + "config.json", true, true);
             configurationBuilder.AddEnvironmentVariables("MOONLIGHT_");
             configurationBuilder.AddCommandLine(args);
             Configuration = configurationBuilder.Build();

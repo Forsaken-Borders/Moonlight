@@ -75,7 +75,7 @@ namespace Moonlight.Server.Networking
             try
             {
                 HandshakePacket handshakePacket = HandshakePacket.Read(packetHandler);
-                ServerStatus serverStatus = new(Configuration.GetValue("server:description", "Moonlight: a C# implementation of the Minecraft Server Protocol."), new("1.17.1", 756), new ServerPlayers(Configuration.GetValue("server:max_players", 100), 0, new()));
+                ServerStatus serverStatus = new(Configuration.GetValue("server:description", "&#7b84d1Moonlight: A C# implementation of the &#26d891Minecraft Server &#7b84d1Protocol."), new("1.17.1", 756), new ServerPlayers(Configuration.GetValue("server:max_players", 100), 0, new()));
                 Logger.Verbose("Handshake Packet Received,\n\tProtocol Version: {version},\n\tServer Address: {address},\n\tPort: {port},\n\tNext State: {state}", handshakePacket.ProtocolVersion, handshakePacket.ServerAddress, handshakePacket.ServerPort, handshakePacket.NextClientState);
 
                 switch (handshakePacket.NextClientState)
@@ -128,7 +128,8 @@ namespace Moonlight.Server.Networking
                             if (tcpClient.Connected)
                             {
                                 PingPongPacket pingPacket = packetHandler.ReadPacket<PingPongPacket>();
-                                PingPongPacket pongPacket = new(default, pingPacket.Data!);
+                                PingPongPacket pongPacket = new(0x01, pingPacket.Data!);
+                                pongPacket.UpdateData();
                                 packetHandler.WritePacket(pongPacket);
                                 Logger.Verbose("Ping Packet Received,\n\tPacket Id: {id}\n\tPacket Data: {data}", pingPacket.Id, pingPacket.Payload);
                             }

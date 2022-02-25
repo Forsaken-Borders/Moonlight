@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Moonlight.Logging
+namespace Moonlight.Server.Logging
 {
     /// <summary>
     /// Specifies which theme to use for the console logger.

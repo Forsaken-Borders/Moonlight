@@ -30,17 +30,19 @@ namespace Moonlight.Api.Server.Abstractions
         /// Decompresses a file located in your cache directory. Autodetects the compression type. Supported types vary, however zip, tar and tar.gz will always be supported.
         /// </summary>
         /// <param name="filename">The name of the file to decompress, located in your cache directory.</param>
+        /// <param name="outputDirectory">The directory that the archive's content was extracted to. Null if the archive failed to extract.</param>
         /// <returns>An absolute filepath to the decompressed file.</returns>
-        string Decompress(string filename);
+        bool Decompress(string filename, out string outputDirectory);
 
         /// <summary>
         /// Compresses a list of files into a single file.
         /// </summary>
         /// <param name="compressionType">Which type of compression to use.</param>
         /// <param name="compressionLevel">The compression level to use.</param>
+        /// <param name="compressedFileName">The name of the compressed archive.</param>
         /// <param name="filenames">The list of files to compress.</param>
         /// <returns>An absolute filepath to the compressed file, located in the plugin's cache directory.</returns>
-        string Compress(CompressionType compressionType = CompressionType.TarGzip, CompressionLevel compressionLevel = CompressionLevel.SmallestSize, params string[] filenames);
+        string Compress(CompressionType compressionType = CompressionType.TarGzip, CompressionLevel compressionLevel = CompressionLevel.SmallestSize, string? compressedFileName = null, params string[] filenames);
 
         /// <summary>
         /// Loads a plugin from the plugin directory.

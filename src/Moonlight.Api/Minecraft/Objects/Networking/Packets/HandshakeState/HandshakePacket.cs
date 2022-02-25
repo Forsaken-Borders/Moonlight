@@ -179,7 +179,7 @@ namespace Moonlight.Api.Minecraft.Objects.Networking.Packets.HandshakeState
                             {
                                 Data = data,
                                 ProtocolVersion = -protocolVersion,
-                                ServerAddress = IPAddress.Parse(hostname),
+                                ServerAddress = Dns.GetHostEntry(hostname).AddressList[0],
                                 ServerPort = (ushort)port,
                                 NextClientState = ClientState.Status
                             };
