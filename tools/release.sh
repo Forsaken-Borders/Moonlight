@@ -12,7 +12,6 @@ COMMIT_HASH=$(git rev-parse HEAD)
 FILE=".github/data/commit_marks.ini"
 
 # Build the project
-mkdir build
 dotnet pack -c Release -o build -p:Version="$TAG_NAME"
 
 # Push to NuGet
