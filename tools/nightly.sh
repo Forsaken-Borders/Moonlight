@@ -33,7 +33,7 @@ get_or_create() {
         echo "$BRANCH_NAME=$latest_commit" >> "$file"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
-        git add .github/data/build_number > /dev/null
+        git add .github/data/commit_marks > /dev/null
         git commit -m "[ci-skip] Add build hash for '$BRANCH_NAME' branch" > /dev/null
         PUSH_COMMIT=1
     fi
@@ -53,11 +53,7 @@ echo $BUILD_NUMBER >> $GITHUB_ENV
 
 # Build and package the project
 mkdir build
-dotnet pack -o build \
-    --include-symbols \
-    --include-source \
-    -p:SymbolPackageFormat=snupkg \
-    -p:VersionSuffix="nightly-$BUILD_NUMBER"
+dotnet pack -o build -p:VersionSuffix="nightly-$BUILD_NUMBER"
 
 # Push if this is a commit to the master branch
 if [[ "${BRANCH_NAME##*/}" == "master" ]]; then
