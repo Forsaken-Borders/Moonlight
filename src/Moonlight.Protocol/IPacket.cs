@@ -1,6 +1,6 @@
 using System;
 
-namespace Moonlight.Api
+namespace Moonlight.Protocol
 {
     public interface IPacket
     {
