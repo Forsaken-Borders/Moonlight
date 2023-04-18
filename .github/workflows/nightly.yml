@@ -3,6 +3,8 @@ on:
     paths:
       - "src/**"
       - "tools/**"
+      - "Directory.Build.props"
+      - ".github/workflows/**"
 
 env:
   DOTNET_NOLOGO: 1
