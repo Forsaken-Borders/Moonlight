@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>Moonlight.Protocol</PackageId>
+    <PackageId>Forsaken-Borders.Moonlight.Protocol</PackageId>
     <Description>An abstract implementation that encompasses all of Minecraft's entities and packets.</Description>
   </PropertyGroup>
 </Project>
