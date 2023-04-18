@@ -59,7 +59,7 @@ if [[ "${BRANCH_NAME##*/}" == "master" ]]; then
     dotnet nuget push "build/*" -k "$NUGET_ORG_API_KEY" -s https://api.nuget.org/v3/index.json
 
     # Run the Discord tool
-    dotnet run --project ./tools/AutoUpdateChannelDescription
+    LATEST_NIGHTLY_VERSION="nightly-$LATEST_NIGHTLY_VERSION" dotnet run --project ./tools/AutoUpdateChannelDescription
 fi
 
 # Push the commit if we made one
