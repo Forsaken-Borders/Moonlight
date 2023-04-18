@@ -29,7 +29,7 @@ get_or_create() {
     touch "$file"
 
     # Search for the branch name in the file
-    if ! grep -q -F "$BRANCH_NAME=" "$file"; then
+    if [[ ! grep -q -F "$BRANCH_NAME=" "$file" ]]; then
         echo "$BRANCH_NAME=$latest_commit" >> "$file"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
@@ -49,7 +49,7 @@ get_or_create() {
 }
 
 BUILD_NUMBER=$(printf "%0*d\n" 5 $(get_or_create))
-echo $BUILD_NUMBER >> $GITHUB_ENV
+echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
 # Build and package the project
 mkdir build
