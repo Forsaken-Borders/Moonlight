@@ -29,7 +29,7 @@ get_or_create() {
     touch "$file"
 
     # Search for the branch name in the file
-    if [[ ! grep -q -F "$BRANCH_NAME=" "$file" ]]; then
+    if ! grep -q -F "$BRANCH_NAME=" "$file"; then
         echo "$BRANCH_NAME=$latest_commit" >> "$file"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
