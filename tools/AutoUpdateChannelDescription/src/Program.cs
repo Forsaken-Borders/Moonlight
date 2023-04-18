@@ -19,14 +19,14 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
             string channelTopic = Environment.GetEnvironmentVariable("DISCORD_CHANNEL_TOPIC") ?? throw new InvalidOperationException("DISCORD_DESCRIPTION environment variable is not set.");
             string nugetUrl = Environment.GetEnvironmentVariable("NUGET_URL") ?? throw new InvalidOperationException("NUGET_URL environment variable is not set.");
             string githubUrl = Environment.GetEnvironmentVariable("GITHUB_URL") ?? throw new InvalidOperationException("GITHUB_URL environment variable is not set.");
-            string? latestStableVersion = Environment.GetEnvironmentVariable("LATEST_STABLE_VERSION");
-            string? latestNightlyVersion = Environment.GetEnvironmentVariable("LATEST_NIGHTLY_VERSION");
+            string? latestStableVersion = nugetUrl + "/" + Environment.GetEnvironmentVariable("LATEST_STABLE_VERSION");
+            string? latestNightlyVersion = nugetUrl + "/" + Environment.GetEnvironmentVariable("LATEST_NIGHTLY_VERSION");
 
             DiscordClient client = new(new DiscordConfiguration
             {
                 Token = token,
                 TokenType = TokenType.Bot,
-                Intents = DiscordIntents.Guilds
+                Intents = DiscordIntents.All
             });
 
             client.GuildDownloadCompleted += async (client, eventArgs) =>
@@ -38,20 +38,20 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
                 string[] channelTopicLines = channel.Topic.Split('\n');
                 if (string.IsNullOrWhiteSpace(latestStableVersion) && channelTopicLines.Any())
                 {
-                    latestStableVersion = channelTopicLines.First(x => x.StartsWith(Formatter.Bold("Latest stable version"))).Split(' ').Last();
+                    latestStableVersion = channelTopicLines.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest stable version")))?.Split(' ').Last() ?? "Unreleased.";
                 }
 
                 if (string.IsNullOrWhiteSpace(latestNightlyVersion) && channelTopicLines.Any())
                 {
-                    latestNightlyVersion = channelTopicLines.First(x => x.StartsWith(Formatter.Bold("Latest nightly version"))).Split(' ').Last();
+                    latestNightlyVersion = channelTopicLines.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest nightly version")))?.Split(' ').Last() ?? "Unreleased.";
                 }
 
                 StringBuilder builder = new(channelTopic);
                 builder.AppendLine();
-                builder.AppendLine(Formatter.Bold("GitHub") + ": " + githubUrl);
-                builder.AppendLine(Formatter.Bold("NuGet") + ": " + nugetUrl);
-                builder.AppendLine(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/" + latestStableVersion);
-                builder.AppendLine(Formatter.Bold("Latest nightly version") + ": " + nugetUrl + "/" + latestNightlyVersion);
+                builder.AppendLine($"{Formatter.Bold("GitHub")}: {githubUrl}");
+                builder.AppendLine($"{Formatter.Bold("NuGet")}: {nugetUrl}");
+                builder.AppendLine($"{Formatter.Bold("Latest stable version")}: {latestStableVersion}");
+                builder.AppendLine($"{Formatter.Bold("Latest nightly version")}: {latestNightlyVersion}");
 
                 try
                 {
