@@ -60,7 +60,7 @@ dotnet pack -o build \
     -p:VersionSuffix="nightly-$BUILD_NUMBER"
 
 # Push if this is a commit to the master branch
-if [[ "${$BRANCH_NAME##*/}" == "master" ]]; then
+if [[ "${BRANCH_NAME##*/}" == "master" ]]; then
     dotnet nuget push "build/*" -k "$NUGET_ORG_API_KEY" -s https://api.nuget.org/v3/index.json
 
     # Run the Discord tool
