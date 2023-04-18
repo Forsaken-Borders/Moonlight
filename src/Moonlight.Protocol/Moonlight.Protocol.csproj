@@ -2,6 +2,5 @@
   <PropertyGroup>
     <PackageId>Forsaken-Borders.Moonlight.Protocol</PackageId>
     <Description>An abstract implementation that encompasses all of Minecraft's entities and packets.</Description>
-    <IncludeSymbols>false</IncludeSymbols>
   </PropertyGroup>
 </Project>

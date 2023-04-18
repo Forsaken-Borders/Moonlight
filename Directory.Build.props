@@ -17,7 +17,6 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(VersionSuffix)' != ''">
     <Version>$(Version)-$(VersionSuffix)</Version>
     <Optimize>False</Optimize>
-    <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
