@@ -23,6 +23,7 @@ jobs:
   docs:
     name: Generate documentation
     runs-on: self-hosted
+    if: "!contains(format('{0} {1}', github.event.head_commit.message, github.event.pull_request.title), '[ci-skip]')"
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
@@ -40,6 +41,7 @@ jobs:
           # Path of the directory containing the static assets.
           path: ./docs/_site/ # default is _site/
   deploy:
+    name: Deploy documentation
     # Add a dependency to the build job
     needs: docs
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment

@@ -1,0 +1,6 @@
+.editorconfig
+.git/
+.gitignore
+.github/
+docs/
+tools/

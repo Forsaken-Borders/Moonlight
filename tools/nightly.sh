@@ -16,7 +16,7 @@ PUSH_COMMIT=0
 # If the branch name is not found in the file, the function saves the current commit to the branch name.
 # The function returns the count between the saved commit and the current commit.
 get_or_create() {
-    local file=".github/data/commit_marks"
+    local file=".github/data/commit_marks.ini"
     local latest_commit=$(git rev-parse "$BRANCH_NAME")
 
     # Checkout the master branch as we're only interested in the data file stored in the master branch
