@@ -39,7 +39,7 @@ get_or_create() {
     fi
 
     # Get the saved commit
-    local existing_run_number=$(grep "^$BRANCH_NAME=" "$file" | cut -d'=' -f2)
+    local existing_run_number=$(grep "$BRANCH_NAME=" "$file" | cut -d'=' -f2)
 
     # Switch back to the branch we were on
     git checkout "$BRANCH_NAME" > /dev/null
