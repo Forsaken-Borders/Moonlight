@@ -24,7 +24,7 @@ jobs:
         with:
           dotnet-version: 7
       - name: Build
-        run: "./tools/release.sh"
+        run: "./tools/release.sh ${{ github.event.release.tag_name }} ${{ secrets.NUGET_ORG_API_KEY }}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

@@ -26,7 +26,15 @@ jobs:
         with:
           dotnet-version: 7
       - name: Build
-        run: "./tools/nightly.sh"
+        run: "./tools/nightly.sh ${{ github.ref }} ${{ secrets.NUGET_ORG_API_KEY }}"
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_GUILD_ID: ${{ secrets.DISCORD_GUILD_ID }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          DISCORD_CHANNEL_TOPIC: ${{ secrets.DISCORD_CHANNEL_TOPIC }}
+          NUGET_URL: ${{ secrets.NUGET_URL }}
+          GITHUB_URL : ${{ github.server_url }}/${{ github.repository }}
+          LATEST_STABLE_VERSION: ${{ env.LATEST_STABLE_VERSION }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
