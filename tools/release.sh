@@ -35,6 +35,9 @@ done
 # Sort the file alphabetically
 sort -o "$FILE" "$FILE"
 
+# Update the Discord topic
+LATEST_STABLE_VERSION="$TAG_NAME" dotnet run --project ./tools/AutoUpdateChannelDescription
+
 # Commit the new build hashes
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 git config --global user.name "github-actions[bot]"
