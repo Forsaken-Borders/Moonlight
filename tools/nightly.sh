@@ -53,14 +53,15 @@ echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
 # Build and package the project
 mkdir build
-dotnet pack -o build -p:VersionSuffix="nightly-$BUILD_NUMBER"
+dotnet build -p:VersionSuffix="nightly-$BUILD_NUMBER"
+dotnet pack -o build --no-build
 
 # Push if this is a commit to the master branch
 if [[ "${BRANCH_NAME##*/}" == "master" ]]; then
     dotnet nuget push "build/*" -k "$NUGET_ORG_API_KEY" -s https://api.nuget.org/v3/index.json
 
     # Run the Discord tool
-    dotnet run --project ./tools/AutoUpdateChannelDescription -p:VersionSuffix="nightly-$BUILD_NUMBER"
+    dotnet run --project ./tools/AutoUpdateChannelDescription --no-build
 fi
 
 # Push the commit if we made one
