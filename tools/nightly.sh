@@ -20,7 +20,7 @@ get_or_create() {
     local latest_commit=$(git rev-parse "$BRANCH_NAME")
 
     # Checkout the master branch as we're only interested in the data file stored in the master branch
-    git checkout master
+    git checkout master > /dev/null
 
     # Create the data directory if it doesn't exist
     mkdir -p .github/data
@@ -33,8 +33,8 @@ get_or_create() {
         echo "$BRANCH_NAME=$latest_commit" >> "$file"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
-        git add .github/data/build_number
-        git commit -m "[ci-skip] Add build hash for '$BRANCH_NAME' branch"
+        git add .github/data/build_number > /dev/null
+        git commit -m "[ci-skip] Add build hash for '$BRANCH_NAME' branch" > /dev/null
         PUSH_COMMIT=1
     fi
 
@@ -42,7 +42,7 @@ get_or_create() {
     local existing_run_number=$(grep "^$BRANCH_NAME=" "$file" | cut -d'=' -f2)
 
     # Switch back to the branch we were on
-    git checkout "$BRANCH_NAME"
+    git checkout "$BRANCH_NAME" > /dev/null
 
     # Count the commits between the saved commit and the current commit (inclusive)
     echo $(git rev-list --count "$existing_run_number".."$latest_commit")
