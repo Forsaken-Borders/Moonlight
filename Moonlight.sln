@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moonlight.Protocol", "src\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moonlight.Api", "src\Moonlight.Api\Moonlight.Api.csproj", "{0FBD55F4-8172-4201-81C1-ED0EE6DDEF81}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{BE05DDAA-1E23-43DE-A3C3-9B5FBEBA6DC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdateChannelDescription", "tools\AutoUpdateChannelDescription\AutoUpdateChannelDescription.csproj", "{B6FAC20C-220B-448F-AD99-0B3B7B3E9844}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,10 +36,15 @@ Global
 		{0FBD55F4-8172-4201-81C1-ED0EE6DDEF81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FBD55F4-8172-4201-81C1-ED0EE6DDEF81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FBD55F4-8172-4201-81C1-ED0EE6DDEF81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6FAC20C-220B-448F-AD99-0B3B7B3E9844}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6FAC20C-220B-448F-AD99-0B3B7B3E9844}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6FAC20C-220B-448F-AD99-0B3B7B3E9844}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6FAC20C-220B-448F-AD99-0B3B7B3E9844}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{DD4E3C8A-BC00-45B4-8B07-54FA3623E18A} = {8CDF501D-FABE-4F58-8075-534DBA11BA0D}
 		{D1AA49B7-EA20-462D-B9FB-99C3A7D87733} = {8CDF501D-FABE-4F58-8075-534DBA11BA0D}
 		{0FBD55F4-8172-4201-81C1-ED0EE6DDEF81} = {8CDF501D-FABE-4F58-8075-534DBA11BA0D}
+		{B6FAC20C-220B-448F-AD99-0B3B7B3E9844} = {BE05DDAA-1E23-43DE-A3C3-9B5FBEBA6DC4}
 	EndGlobalSection
 EndGlobal

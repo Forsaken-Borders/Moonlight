@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 
@@ -46,7 +47,7 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
                         builder.AppendLine(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/" + latestStableVersion);
                     }
 
-                    string nightlyVersion = typeof(CommandAllExtension).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+                    string nightlyVersion = typeof(Moonlight.Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
 
                     // Default version string is 1.0.0, which happens when the -p:Nightly compiler argument is not set.
                     if (nightlyVersion.Equals("1.0.0", StringComparison.Ordinal))
