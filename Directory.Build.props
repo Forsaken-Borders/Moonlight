@@ -11,6 +11,7 @@
     <RepositoryUrl>https://github.com/Forsaken-Borders/Moonlight</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Version>0.2.0</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(VersionSuffix)' != ''">
     <Version>$(Version)-$(VersionSuffix)</Version>
