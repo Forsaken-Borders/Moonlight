@@ -1,4 +1,3 @@
-name: .NET Docs
 on:
   release:
     types:
@@ -8,7 +7,8 @@ on:
     branches:
       - master
     paths:
-      - 'docs/**'
+      - "docs/**"
+      - ".github/workflows/docs.yml"
 
 env:
   DOTNET_NOLOGO: 1
@@ -20,14 +20,15 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  docs:
+    name: Generate documentation
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.103
+          dotnet-version: 7
       - name: Install DocFX
         run: dotnet tool update -g docfx --prerelease
         continue-on-error: true
@@ -40,7 +41,7 @@ jobs:
           path: ./docs/_site/ # default is _site/
   deploy:
     # Add a dependency to the build job
-    needs: build
+    needs: docs
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write      # to deploy to Pages
@@ -49,7 +50,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    # Specify runner + deployment step
     runs-on: self-hosted
     steps:
       - name: Deploy to GitHub Pages
