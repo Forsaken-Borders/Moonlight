@@ -1,7 +1,6 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
@@ -21,6 +20,7 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
             string nugetUrl = Environment.GetEnvironmentVariable("NUGET_URL") ?? throw new InvalidOperationException("NUGET_URL environment variable is not set.");
             string githubUrl = Environment.GetEnvironmentVariable("GITHUB_URL") ?? throw new InvalidOperationException("GITHUB_URL environment variable is not set.");
             string? latestStableVersion = Environment.GetEnvironmentVariable("LATEST_STABLE_VERSION");
+            string? latestNightlyVersion = Environment.GetEnvironmentVariable("LATEST_NIGHTLY_VERSION");
 
             DiscordClient client = new(new DiscordConfiguration
             {
@@ -34,45 +34,39 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
                 DiscordGuild guild = client.Guilds[ulong.Parse(guildId, NumberStyles.Number, CultureInfo.InvariantCulture)];
                 DiscordChannel channel = guild.Channels[ulong.Parse(channelId, NumberStyles.Number, CultureInfo.InvariantCulture)];
 
+                // Attempt to use the channel topic as a "cache" when the versions are not provided.
+                string[] channelTopicLines = channel.Topic.Split('\n');
+                if (string.IsNullOrWhiteSpace(latestStableVersion) && channelTopicLines.Any())
+                {
+                    latestStableVersion = channelTopicLines.First(x => x.StartsWith(Formatter.Bold("Latest stable version"))).Split(' ').Last();
+                }
+
+                if (string.IsNullOrWhiteSpace(latestNightlyVersion) && channelTopicLines.Any())
+                {
+                    latestNightlyVersion = channelTopicLines.First(x => x.StartsWith(Formatter.Bold("Latest nightly version"))).Split(' ').Last();
+                }
+
                 StringBuilder builder = new(channelTopic);
                 builder.AppendLine();
                 builder.AppendLine(Formatter.Bold("GitHub") + ": " + githubUrl);
-
-                // If the latest stable version is not set, try to get it from the channel topic.
-                latestStableVersion ??= channel.Topic?.Split('\n')?.FirstOrDefault(line => line.StartsWith(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/", false, CultureInfo.InvariantCulture))?.Split('/').LastOrDefault();
-                if (!string.IsNullOrWhiteSpace(latestStableVersion))
-                {
-                    builder.AppendLine(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/" + latestStableVersion);
-                }
-
-                string nightlyVersion = typeof(Moonlight.Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
-
-                // Default version string is 1.0.0, which happens when the -p:Nightly compiler argument is not set.
-                if (nightlyVersion.Equals("1.0.0", StringComparison.Ordinal))
-                {
-                    // Get the previous version from the channel topic.
-                    nightlyVersion = channel.Topic?.Split('\n')?.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest preview version") + ": " + nugetUrl + "/"))?.Split('/').LastOrDefault() ?? throw new InvalidOperationException("Could not find previous nightly version in channel topic.");
-                }
-                else
-                {
-                    // Update the channel topic with the latest nightly version.
-                    builder.AppendLine(Formatter.Bold("Latest preview version") + ": " + nugetUrl + "/" + nightlyVersion);
-                }
+                builder.AppendLine(Formatter.Bold("NuGet") + ": " + nugetUrl);
+                builder.AppendLine(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/" + latestStableVersion);
+                builder.AppendLine(Formatter.Bold("Latest nightly version") + ": " + nugetUrl + "/" + latestNightlyVersion);
 
                 try
                 {
                     await channel.ModifyAsync(channel =>
                     {
-                        channel.AuditLogReason = $"Updating channel topic to match stable version {latestStableVersion} and nightly version {nightlyVersion}.";
+                        channel.AuditLogReason = $"Updating channel topic to match stable version {latestStableVersion} and nightly version {latestNightlyVersion}.";
                         channel.Topic = builder.ToString();
                     });
                 }
                 catch (DiscordException error)
                 {
                     Console.WriteLine($"Error: HTTP {error.WebResponse.ResponseCode}, {error.WebResponse.Response}");
+                    Environment.Exit(1);
                 }
 
-                await client.DisconnectAsync();
                 Environment.Exit(0);
             };
 
