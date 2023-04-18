@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PackageTags>minecraft, minecraft-protocol</PackageTags>
+    <Authors>OoLunar</Authors>
+    <PackageProjectUrl>https://github.com/Forsaken-Borders/Moonlight</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Forsaken-Borders/Moonlight</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(VersionSuffix)' != ''">
+    <Version>$(Version)-$(VersionSuffix)</Version>
+    <Optimize>False</Optimize>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>

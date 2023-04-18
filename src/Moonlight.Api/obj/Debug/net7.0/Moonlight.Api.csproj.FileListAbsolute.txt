@@ -1,0 +1,15 @@
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/bin/Debug/net7.0/Moonlight.Api.deps.json
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/bin/Debug/net7.0/Moonlight.Api.dll
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/bin/Debug/net7.0/Moonlight.Api.pdb
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/bin/Debug/net7.0/Moonlight.Protocol.dll
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/bin/Debug/net7.0/Moonlight.Protocol.pdb
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.csproj.AssemblyReference.cache
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.GeneratedMSBuildEditorConfig.editorconfig
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.AssemblyInfoInputs.cache
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.AssemblyInfo.cs
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.csproj.CoreCompileInputs.cache
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.csproj.CopyComplete
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.dll
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/refint/Moonlight.Api.dll
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/Moonlight.Api.pdb
+/home/lunar/Code/Forsaken Borders/Moonlight/src/Moonlight.Api/obj/Debug/net7.0/ref/Moonlight.Api.dll

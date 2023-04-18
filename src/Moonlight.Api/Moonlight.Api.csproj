@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Moonlight.Api</PackageId>
+    <Description>Moonlight provides a comprehensive server API that allows for the creation and stable integration of server-side mods in a clear and explicit manner.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Moonlight.Protocol/Moonlight.Protocol.csproj" />
+  </ItemGroup>
+</Project>

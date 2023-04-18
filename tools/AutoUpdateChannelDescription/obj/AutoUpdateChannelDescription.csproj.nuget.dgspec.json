@@ -1,0 +1,227 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/tools/AutoUpdateChannelDescription/AutoUpdateChannelDescription.csproj": {}
+  },
+  "projects": {
+    "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/libs/DSharpPlus.AsyncEvents/DSharpPlus/DSharpPlus.csproj": {
+      "version": "4.4.0",
+      "restore": {
+        "projectUniqueName": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/libs/DSharpPlus.AsyncEvents/DSharpPlus/DSharpPlus.csproj",
+        "projectName": "DSharpPlus",
+        "projectPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/libs/DSharpPlus.AsyncEvents/DSharpPlus/DSharpPlus.csproj",
+        "packagesPath": "/home/lunar/.nuget/packages/",
+        "outputPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/libs/DSharpPlus.AsyncEvents/DSharpPlus/obj/",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "configFilePaths": [
+          "/home/lunar/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "targetAlias": "netstandard2.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "targetAlias": "netstandard2.0",
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.2, )"
+            },
+            "System.Collections.Immutable": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "System.Memory": {
+              "target": "Package",
+              "version": "[4.5.5, )"
+            },
+            "System.Net.Http": {
+              "target": "Package",
+              "version": "[4.3.4, )"
+            },
+            "System.Net.WebSockets": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            },
+            "System.Net.WebSockets.Client": {
+              "target": "Package",
+              "version": "[4.3.2, )"
+            },
+            "System.Runtime.InteropServices.RuntimeInformation": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            },
+            "System.Threading.Channels": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "/usr/src/dotnet/sdk/7.0.102/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/src/OoLunar.DSharpPlus.CommandAll.csproj": {
+      "version": "1.1.0-Nightly-1",
+      "restore": {
+        "projectUniqueName": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/src/OoLunar.DSharpPlus.CommandAll.csproj",
+        "projectName": "OoLunar.DSharpPlus.CommandAll",
+        "projectPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/src/OoLunar.DSharpPlus.CommandAll.csproj",
+        "packagesPath": "/home/lunar/.nuget/packages/",
+        "outputPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/src/obj/",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "configFilePaths": [
+          "/home/lunar/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {
+              "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/libs/DSharpPlus.AsyncEvents/DSharpPlus/DSharpPlus.csproj": {
+                "projectPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/libs/DSharpPlus.AsyncEvents/DSharpPlus/DSharpPlus.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "Humanizer": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.14.1, )"
+            },
+            "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/src/dotnet/sdk/7.0.102/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/tools/AutoUpdateChannelDescription/AutoUpdateChannelDescription.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/tools/AutoUpdateChannelDescription/AutoUpdateChannelDescription.csproj",
+        "projectName": "AutoUpdateChannelDescription",
+        "projectPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/tools/AutoUpdateChannelDescription/AutoUpdateChannelDescription.csproj",
+        "packagesPath": "/home/lunar/.nuget/packages/",
+        "outputPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/tools/AutoUpdateChannelDescription/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/lunar/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {
+              "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/src/OoLunar.DSharpPlus.CommandAll.csproj": {
+                "projectPath": "/home/lunar/Code/Lunar/Tomoe/libs/DSharpPlus.CommandAll/src/OoLunar.DSharpPlus.CommandAll.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/src/dotnet/sdk/7.0.102/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
