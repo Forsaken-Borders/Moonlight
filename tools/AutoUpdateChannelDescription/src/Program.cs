@@ -39,7 +39,7 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
                 builder.AppendLine(Formatter.Bold("GitHub") + ": " + githubUrl);
 
                 // If the latest stable version is not set, try to get it from the channel topic.
-                latestStableVersion ??= channel.Topic.Split('\n').FirstOrDefault(line => line.StartsWith(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/", false, CultureInfo.InvariantCulture))?.Split('/').LastOrDefault();
+                latestStableVersion ??= channel.Topic?.Split('\n')?.FirstOrDefault(line => line.StartsWith(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/", false, CultureInfo.InvariantCulture))?.Split('/').LastOrDefault();
                 if (!string.IsNullOrWhiteSpace(latestStableVersion))
                 {
                     builder.AppendLine(Formatter.Bold("Latest stable version") + ": " + nugetUrl + "/" + latestStableVersion);
@@ -51,7 +51,7 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
                 if (nightlyVersion.Equals("1.0.0", StringComparison.Ordinal))
                 {
                     // Get the previous version from the channel topic.
-                    string previousNightlyVersion = channel.Topic.Split('\n').FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest preview version") + ": " + nugetUrl + "/"))?.Split('/').LastOrDefault() ?? throw new InvalidOperationException("Could not find previous nightly version in channel topic.");
+                    nightlyVersion = channel.Topic?.Split('\n')?.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest preview version") + ": " + nugetUrl + "/"))?.Split('/').LastOrDefault() ?? throw new InvalidOperationException("Could not find previous nightly version in channel topic.");
                 }
                 else
                 {
