@@ -6,10 +6,6 @@ set -x
 # Exit on error
 set -e
 
-BRANCH_NAME="$1"
-NUGET_ORG_API_KEY="$2"
-PUSH_COMMIT=0
-
 # The data file `.github/data/commit_marks` is in KEY=VALUE format where:
 # KEY is the branch name
 # VALUE is the last commit from the release workflow.
@@ -48,6 +44,9 @@ get_or_create() {
     echo $(git rev-list --count "$existing_run_number".."$latest_commit")
 }
 
+BRANCH_NAME="$1"
+NUGET_ORG_API_KEY="$2"
+PUSH_COMMIT=0
 LATEST_NIGHTLY_VERSION=$(printf "%0*d\n" 5 $(get_or_create))
 echo "BUILD_NUMBER=$LATEST_NIGHTLY_VERSION" >> $GITHUB_ENV
 

@@ -37,14 +37,14 @@ namespace Moonlight.Tools.AutoUpdateChannelDescription
                 // Attempt to use the channel topic as a "cache" when the versions are not provided.
                 string[] channelTopicLines = channel.Topic.Split('\n');
                 latestStableVersion = string.IsNullOrWhiteSpace(latestStableVersion) && channelTopicLines.Any()
-                    ? channelTopicLines.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest stable version")))?.Split(' ').Last() ?? "Unreleased."
+                    ? channelTopicLines.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest stable version"), false, CultureInfo.InvariantCulture))?.Split(' ').Last() ?? "Unreleased."
                     : nugetUrl + "/" + latestStableVersion;
 
                 latestNightlyVersion = string.IsNullOrWhiteSpace(latestNightlyVersion) && channelTopicLines.Any()
-                    ? channelTopicLines.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest nightly version")))?.Split(' ').Last() ?? "Unreleased."
+                    ? channelTopicLines.FirstOrDefault(x => x.StartsWith(Formatter.Bold("Latest nightly version"), false, CultureInfo.InvariantCulture))?.Split(' ').Last() ?? "Unreleased."
                     : nugetUrl + "/" + latestNightlyVersion;
 
-                StringBuilder builder = new(channelTopic);
+                StringBuilder builder = new(channelTopic.Trim());
                 builder.AppendLine();
                 builder.AppendLine($"{Formatter.Bold("GitHub")}: {githubUrl}");
                 builder.AppendLine($"{Formatter.Bold("NuGet")}: {nugetUrl}");
