@@ -3,7 +3,7 @@ using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Protocol.Net
 {
-    public class PingPacket : IPacket<PingPacket>
+    public record PingPacket : IPacket<PingPacket>
     {
         public static VarInt Id { get; } = 0x01;
         public VarLong Payload { get; init; }
