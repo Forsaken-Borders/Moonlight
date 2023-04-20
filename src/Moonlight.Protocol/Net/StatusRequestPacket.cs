@@ -16,7 +16,7 @@ namespace Moonlight.Protocol.Net
             return position;
         }
 
-        public static StatusRequestPacket Deserialize(Span<byte> data) => VarInt.Deserialize(data) == Id
+        public static StatusRequestPacket Deserialize(ReadOnlySpan<byte> data) => VarInt.Deserialize(data) == Id
             ? new StatusRequestPacket()
             : throw new InvalidOperationException("Invalid packet id.");
     }

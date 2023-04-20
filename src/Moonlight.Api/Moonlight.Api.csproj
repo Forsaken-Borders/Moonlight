@@ -2,8 +2,10 @@
   <PropertyGroup>
     <PackageId>Forsaken-Borders.Moonlight.Api</PackageId>
     <Description>Moonlight provides a comprehensive server API that allows for the creation and stable integration of server-side mods in a clear and explicit manner.</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
     <ProjectReference Include="../Moonlight.Protocol/Moonlight.Protocol.csproj" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />

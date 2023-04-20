@@ -41,19 +41,19 @@ namespace Moonlight.Protocol.VariableTypes
             return position;
         }
 
-        public static VarLong Deserialize(Span<byte> data)
+        public static VarLong Deserialize(ReadOnlySpan<byte> data, out int offset)
         {
-            int position = 0;
+            offset = 0;
             long result = 0;
             byte read;
             do
             {
-                read = data[position];
+                read = data[offset];
                 int value = read & SEGMENT_BITS;
-                result |= (long)value << (7 * position);
+                result |= (long)value << (7 * offset);
 
-                position++;
-                if (position > 10)
+                offset++;
+                if (offset > 10)
                 {
                     throw new InvalidOperationException("VarLong is too big.");
                 }

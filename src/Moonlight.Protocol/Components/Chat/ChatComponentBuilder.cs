@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Moonlight.Protocol.Components.Chat
 {
-    public sealed record ChatComponentBuilder
+    public sealed class ChatComponentBuilder
     {
         public string Text { get; set; }
         public ChatFormatting Formatting { get; set; }

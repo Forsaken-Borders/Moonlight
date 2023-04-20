@@ -48,7 +48,7 @@ namespace Moonlight.Protocol.Net
             return position;
         }
 
-        public static HandshakePacket Deserialize(Span<byte> data)
+        public static HandshakePacket Deserialize(ReadOnlySpan<byte> data)
         {
             if (VarInt.Deserialize(data) != Id)
             {

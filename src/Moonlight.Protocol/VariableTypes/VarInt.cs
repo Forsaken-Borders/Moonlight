@@ -4,6 +4,9 @@ namespace Moonlight.Protocol.VariableTypes
 {
     public readonly record struct VarInt : ISpanSerializable<VarInt>
     {
+        private const int SEGMENT_BITS = 0x7F;
+        private const int CONTINUE_BIT = 0x80;
+
         public int Value { get; init; }
         public int Length { get; init; }
 
@@ -24,11 +27,11 @@ namespace Moonlight.Protocol.VariableTypes
             int position = 0;
             do
             {
-                byte bit = (byte)(value & 127);
+                byte bit = (byte)(value & SEGMENT_BITS);
                 value >>= 7;
                 if (value != 0)
                 {
-                    bit |= 128;
+                    bit |= CONTINUE_BIT;
                 }
 
                 target[position] = bit;
@@ -38,17 +41,17 @@ namespace Moonlight.Protocol.VariableTypes
             return position;
         }
 
-        public static VarInt Deserialize(Span<byte> data)
+        public static VarInt Deserialize(ReadOnlySpan<byte> data, out int offset)
         {
+            offset = 0;
             int value = 0;
-            int position = 0;
             byte bit;
             do
             {
-                bit = data[position];
-                value |= (bit & 127) << (7 * position);
-                position++;
-            } while ((bit & 128) == 128);
+                bit = data[offset];
+                value |= (bit & SEGMENT_BITS) << (7 * offset);
+                offset++;
+            } while ((bit & CONTINUE_BIT) == CONTINUE_BIT);
 
             return new VarInt(value);
         }
