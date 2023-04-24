@@ -15,11 +15,7 @@ namespace Moonlight.Api.Net
 {
     public sealed class PacketReader
     {
-        private delegate T DeserializeDelegate<T>(Span<byte> buffer);
-
-        public IReadOnlyDictionary<VarInt, nint> PacketDeserializers => _packetDeserializers;
-
-        private readonly Dictionary<VarInt, nint> _packetDeserializers = new();
+        public nint[] PacketDeserializers { get; init; }
         private readonly PipeReader _pipeReader;
 
         public PacketReader(Stream stream)
@@ -27,6 +23,7 @@ namespace Moonlight.Api.Net
             _pipeReader = PipeReader.Create(stream);
 
             Type byteSpanType = typeof(Span<byte>);
+            List<nint> packetDeserializers = new();
 
             // Iterate through the assembly and find all classes that implement IPacket<>
             foreach (Type type in typeof(IPacket<>).Assembly.GetExportedTypes())
@@ -57,8 +54,10 @@ namespace Moonlight.Api.Net
                 nint deserializeMethodPointer = Marshal.GetFunctionPointerForDelegate(deserializeDelegate);
 
                 // Now we store the pointer in a dictionary for later use
-                _packetDeserializers.Add(packetId, deserializeMethodPointer);
+                packetDeserializers[packetId] = deserializeMethodPointer;
             }
+
+            PacketDeserializers = packetDeserializers.ToArray();
         }
 
         public async ValueTask<T> ReadPacketAsync<T>(CancellationToken cancellationToken = default) where T : IPacket<T>
@@ -69,16 +68,12 @@ namespace Moonlight.Api.Net
             return packet;
         }
 
+        // TODO: Handle
         public async ValueTask<(VarInt, IPacket)> ReadPacketAsync(CancellationToken cancellationToken = default)
         {
             ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
             VarInt packetId = VarInt.Deserialize(readResult.Buffer.ToArray(), out _);
-            if (!_packetDeserializers.TryGetValue(packetId, out nint deserializeMethodPointer))
-            {
-                throw new InvalidOperationException($"Unknown packet id: {packetId}");
-            }
-
-            IPacket packet = DeserializePacket(deserializeMethodPointer, readResult.Buffer.IsSingleSegment ? readResult.Buffer.FirstSpan : readResult.Buffer.ToArray(), out int offset);
+            IPacket packet = DeserializePacket(PacketDeserializers[packetId], readResult.Buffer.IsSingleSegment ? readResult.Buffer.FirstSpan : readResult.Buffer.ToArray(), out int offset);
             _pipeReader.AdvanceTo(readResult.Buffer.GetPosition(offset, readResult.Buffer.Start));
             return (packetId, packet);
         }

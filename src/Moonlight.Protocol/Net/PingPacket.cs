@@ -20,8 +20,8 @@ namespace Moonlight.Protocol.Net
             return position;
         }
 
-        public static PingPacket Deserialize(ReadOnlySpan<byte> data) => VarInt.Deserialize(data) != Id
+        public static PingPacket Deserialize(ReadOnlySpan<byte> data, out int offset) => VarInt.Deserialize(data, out _) != Id
             ? throw new InvalidOperationException("Invalid packet id.")
-            : new PingPacket(VarLong.Deserialize(data[Id.Length..]));
+            : new PingPacket(VarLong.Deserialize(data[Id.Length..], out offset));
     }
 }

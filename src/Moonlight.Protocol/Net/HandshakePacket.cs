@@ -48,16 +48,16 @@ namespace Moonlight.Protocol.Net
             return position;
         }
 
-        public static HandshakePacket Deserialize(ReadOnlySpan<byte> data)
+        public static HandshakePacket Deserialize(ReadOnlySpan<byte> data, out int offset)
         {
-            if (VarInt.Deserialize(data) != Id)
+            if (VarInt.Deserialize(data, out _) != Id)
             {
                 throw new InvalidOperationException("Invalid packet id.");
             }
 
             int position = Id.Length;
-            VarInt protocolVersion = VarInt.Deserialize(data[position..]);
-            position += protocolVersion.Length;
+            VarInt protocolVersion = VarInt.Deserialize(data[position..], out offset);
+            position += offset;
 
             int addressLength = data[position..].IndexOf((byte)0);
             string serverAddress = Encoding.UTF8.GetString(data[position..(position + addressLength)]);
@@ -66,7 +66,9 @@ namespace Moonlight.Protocol.Net
             ushort serverPort = BitConverter.ToUInt16(data[position..]);
             position += sizeof(ushort);
 
-            VarInt nextState = VarInt.Deserialize(data[position..]);
+            VarInt nextState = VarInt.Deserialize(data[position..], out offset);
+            position += offset;
+            offset = position;
             return new HandshakePacket(protocolVersion, serverAddress, serverPort, nextState);
         }
     }
