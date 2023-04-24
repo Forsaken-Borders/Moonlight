@@ -13,7 +13,7 @@ env:
 
 jobs:
   nightly:
-    name: "Publish Nightly Commit [${{ github.sha[0] }}${{ github.sha[1] }}${{ github.sha[2] }}${{ github.sha[3] }}${{ github.sha[4] }}${{ github.sha[5] }}${{ github.sha[6] }}${{ github.sha[7] }}](${{ github.sha }})"
+    name: Publish Nightly
     runs-on: self-hosted
     if: "!contains(format('{0} {1}', github.event.head_commit.message, github.event.pull_request.title), '[ci-skip]')"
     steps:
