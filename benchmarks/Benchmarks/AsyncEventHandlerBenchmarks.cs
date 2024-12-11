@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
@@ -10,6 +11,7 @@ namespace Moonlight.Benchmarks
     public class AsyncEventHandlerBenchmarks
     {
         public IEnumerable<AsyncServerEvent<AsyncServerEventArgs>> AsyncEvents { get; }
+        public IEnumerable<object[]> AsyncEventsWithEventArgs => AsyncEvents.Select(x => new object[] { x, new AsyncServerEventArgs() });
 
         public AsyncEventHandlerBenchmarks()
         {
@@ -18,14 +20,15 @@ namespace Moonlight.Benchmarks
             Expression<Func<AsyncServerEventArgs, ValueTask>> postHandler = eventArgs => ValueTask.CompletedTask;
 
             List<AsyncServerEvent<AsyncServerEventArgs>> asyncEvents = [];
-            for (int i = 0; i < 10; i++)
+            foreach (int i in Enumerable.Range(0, Environment.ProcessorCount + 1).Where(x => x % 4 == 0).Append(1).Append(2).Append(5))
             {
-                asyncEvents.Add(new AsyncServerEvent<AsyncServerEventArgs>());
+                AsyncServerEvent<AsyncServerEventArgs> asyncEvent = new();
+                asyncEvents.Add(asyncEvent);
                 int j = 0;
                 while (j < i)
                 {
-                    asyncEvents[i].AddPreHandler(preHandler.Compile().Method.CreateDelegate<AsyncServerEventPreHandler<AsyncServerEventArgs>>());
-                    asyncEvents[i].AddPostHandler(postHandler.Compile().Method.CreateDelegate<AsyncServerEventHandler<AsyncServerEventArgs>>());
+                    asyncEvent.AddPreHandler(preHandler.Compile().Method.CreateDelegate<AsyncServerEventPreHandler<AsyncServerEventArgs>>());
+                    asyncEvent.AddPostHandler(postHandler.Compile().Method.CreateDelegate<AsyncServerEventHandler<AsyncServerEventArgs>>());
                     j++;
                 }
             }
@@ -38,11 +41,11 @@ namespace Moonlight.Benchmarks
         public void Prepare(AsyncServerEvent<AsyncServerEventArgs> asyncEvent) => asyncEvent.Prepare();
 
         [Benchmark]
-        [ArgumentsSource(nameof(AsyncEvents))]
-        public async ValueTask InvokeAsync(AsyncServerEvent<AsyncServerEventArgs> asyncEvent) => await asyncEvent.InvokePostHandlersAsync(new AsyncServerEventArgs());
+        [ArgumentsSource(nameof(AsyncEventsWithEventArgs))]
+        public async ValueTask InvokeAsync(AsyncServerEvent<AsyncServerEventArgs> asyncEvent, AsyncServerEventArgs eventArgs) => await asyncEvent.InvokePostHandlersAsync(eventArgs);
 
         [Benchmark]
-        [ArgumentsSource(nameof(AsyncEvents))]
-        public async ValueTask<bool> InvokePreHandlersAsync(AsyncServerEvent<AsyncServerEventArgs> asyncEvent) => await asyncEvent.InvokePreHandlersAsync(new AsyncServerEventArgs());
+        [ArgumentsSource(nameof(AsyncEventsWithEventArgs))]
+        public async ValueTask<bool> InvokePreHandlersAsync(AsyncServerEvent<AsyncServerEventArgs> asyncEvent, AsyncServerEventArgs eventArgs) => await asyncEvent.InvokePreHandlersAsync(eventArgs);
     }
 }
