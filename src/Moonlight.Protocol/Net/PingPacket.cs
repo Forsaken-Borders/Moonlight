@@ -1,9 +1,11 @@
 using System;
+using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Protocol.Net
 {
-    public record PingPacket : IPacket<PingPacket>
+    public record PingPacket : IServerPacket<PingPacket>
     {
         public static VarInt Id { get; } = 0x01;
         public VarLong Payload { get; init; }
@@ -20,8 +22,18 @@ namespace Moonlight.Protocol.Net
             return position;
         }
 
-        public static PingPacket Deserialize(ReadOnlySpan<byte> data, out int offset) => VarInt.Deserialize(data, out _) != Id
-            ? throw new InvalidOperationException("Invalid packet id.")
-            : new PingPacket(VarLong.Deserialize(data[Id.Length..], out offset));
+        public static bool TryDeserialize(ref SequenceReader<byte> reader, [NotNullWhen(true)] out PingPacket? result)
+        {
+            if (VarInt.TryDeserialize(ref reader, out VarInt id) && id == Id && VarLong.TryDeserialize(ref reader, out VarLong payload))
+            {
+                result = new PingPacket(payload);
+                return true;
+            }
+
+            result = default;
+            return false;
+        }
+
+        public static PingPacket Deserialize(ref SequenceReader<byte> reader) => new(VarLong.Deserialize(ref reader));
     }
 }

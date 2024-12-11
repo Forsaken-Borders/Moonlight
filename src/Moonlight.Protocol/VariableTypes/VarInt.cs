@@ -1,11 +1,17 @@
 using System;
+using System.Buffers;
 
 namespace Moonlight.Protocol.VariableTypes
 {
     public readonly record struct VarInt : ISpanSerializable<VarInt>
     {
-        private const int SEGMENT_BITS = 0x7F;
-        private const int CONTINUE_BIT = 0x80;
+        public const int MaxValue = int.MaxValue;
+        public const int MinValue = int.MinValue;
+        public const int MaxLength = 5;
+        public const int MinLength = 1;
+
+        private const int SEGMENT_BITS = 127;
+        private const int CONTINUE_BIT = 128;
 
         public int Value { get; init; }
         public int Length { get; init; }
@@ -13,17 +19,18 @@ namespace Moonlight.Protocol.VariableTypes
         public VarInt(int value)
         {
             Value = value;
+
+            uint unsignedValue = (uint)value;
             do
             {
-                value >>= 7;
+                unsignedValue >>= 7;
                 Length++;
-            } while (value != 0);
+            } while (unsignedValue != 0);
         }
 
         public int Serialize(Span<byte> target)
         {
-            target.Clear();
-            int value = Value;
+            uint value = (uint)Value;
             int position = 0;
             do
             {
@@ -36,25 +43,49 @@ namespace Moonlight.Protocol.VariableTypes
 
                 target[position] = bit;
                 position++;
-            }
-            while (value != 0);
+            } while (value != 0);
             return position;
         }
 
-        public static VarInt Deserialize(ReadOnlySpan<byte> data, out int offset)
+        public static bool TryDeserialize(ref SequenceReader<byte> reader, out VarInt result)
         {
-            offset = 0;
-            int value = 0;
+            if (reader.Remaining < 1)
+            {
+                result = default;
+                return false;
+            }
+
             byte bit;
+            int value = 0;
+            int offset = 0;
             do
             {
-                bit = data[offset];
+                if (!reader.TryRead(out bit))
+                {
+                    result = default;
+                    return false;
+                }
+
                 value |= (bit & SEGMENT_BITS) << (7 * offset);
                 offset++;
+                if (offset > 5)
+                {
+                    throw new InvalidOperationException("VarInt is too big.");
+                }
+
             } while ((bit & CONTINUE_BIT) == CONTINUE_BIT);
 
-            return new VarInt(value);
+            result = new VarInt()
+            {
+                Value = value,
+                Length = offset
+            };
+
+            return true;
         }
+
+        public static VarInt Deserialize(ref SequenceReader<byte> reader)
+            => !TryDeserialize(ref reader, out VarInt result) ? throw new InvalidOperationException("Not enough data.") : result;
 
         public static implicit operator VarInt(int value) => new(value);
         public static implicit operator int(VarInt value) => value.Value;

@@ -5,6 +5,11 @@ namespace Moonlight.Protocol.Net
     public interface IPacket
     {
         /// <summary>
+        /// The id of the packet.
+        /// </summary>
+        public VarInt Id { get; }
+
+        /// <summary>
         /// Calculates the size of the packet in bytes.
         /// </summary>
         /// <returns>The size of the packet in bytes.</returns>
@@ -16,6 +21,7 @@ namespace Moonlight.Protocol.Net
         /// <summary>
         /// The id of the packet.
         /// </summary>
-        public static abstract VarInt Id { get; }
+        public static new abstract VarInt Id { get; }
+        VarInt IPacket.Id => T.Id;
     }
 }

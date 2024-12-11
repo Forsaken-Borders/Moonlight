@@ -1,9 +1,11 @@
 <Project>
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPublishable>false</IsPublishable>
+    <ProjectRoot>$(MSBuildThisFileDirectory)</ProjectRoot>
   </PropertyGroup>
   <PropertyGroup>
     <PackageTags>minecraft, minecraft-protocol</PackageTags>
@@ -14,13 +16,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Version>0.2.0</Version>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(VersionSuffix)' != ''">
-    <Version>$(Version)-$(VersionSuffix)</Version>
-    <Optimize>False</Optimize>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <DebugType>embedded</DebugType>
-  </PropertyGroup>
   <ItemGroup>
-    <None Include="../../LICENSE" Pack="true" PackagePath="" />
+    <None Include="../../LICENSE" Pack="true" />
   </ItemGroup>
 </Project>

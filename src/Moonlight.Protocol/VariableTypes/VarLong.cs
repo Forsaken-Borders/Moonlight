@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 
 namespace Moonlight.Protocol.VariableTypes
 {
@@ -41,25 +42,66 @@ namespace Moonlight.Protocol.VariableTypes
             return position;
         }
 
-        public static VarLong Deserialize(ReadOnlySpan<byte> data, out int offset)
+        public static bool TryDeserialize(ref SequenceReader<byte> reader, out VarLong result)
         {
-            offset = 0;
-            long result = 0;
-            byte read;
+            if (reader.Remaining < 1)
+            {
+                result = default;
+                return false;
+            }
+
+            byte bit;
+            long value = 0;
+            int offset = 0;
             do
             {
-                read = data[offset];
-                int value = read & SEGMENT_BITS;
-                result |= (long)value << (7 * offset);
+                if (!reader.TryRead(out bit))
+                {
+                    result = default;
+                    return false;
+                }
 
+                int segment = bit & SEGMENT_BITS;
+                value |= (long)segment << (7 * offset);
                 offset++;
                 if (offset > 10)
                 {
-                    throw new InvalidOperationException("VarLong is too big.");
+                    result = default;
+                    return false;
                 }
-            } while ((read & CONTINUE_BIT) != 0);
+            } while ((bit & CONTINUE_BIT) != 0);
 
-            return result;
+            result = new VarLong(value);
+            return true;
+        }
+
+        public static VarLong Deserialize(ref SequenceReader<byte> reader)
+        {
+            if (reader.Remaining < 1)
+            {
+                throw new InvalidOperationException("Not enough data to deserialize VarLong");
+            }
+
+            byte bit;
+            long value = 0;
+            int offset = 0;
+            do
+            {
+                if (!reader.TryRead(out bit))
+                {
+                    throw new InvalidOperationException("Not enough data to deserialize VarLong");
+                }
+
+                int segment = bit & SEGMENT_BITS;
+                value |= (long)segment << (7 * offset);
+                offset++;
+                if (offset > 10)
+                {
+                    throw new InvalidOperationException("VarLong is too large to deserialize");
+                }
+            } while ((bit & CONTINUE_BIT) != 0);
+
+            return new VarLong(value);
         }
 
         public static implicit operator VarLong(long value) => new(value);

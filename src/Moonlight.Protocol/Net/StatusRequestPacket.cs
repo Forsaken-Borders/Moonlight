@@ -1,4 +1,6 @@
 using System;
+using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Protocol.Net
@@ -16,8 +18,12 @@ namespace Moonlight.Protocol.Net
             return position;
         }
 
-        public static StatusRequestPacket Deserialize(ReadOnlySpan<byte> data, out int offset) => VarInt.Deserialize(data, out offset) == Id
-            ? new StatusRequestPacket()
-            : throw new InvalidOperationException("Invalid packet id.");
+        public static bool TryDeserialize(ref SequenceReader<byte> reader, [NotNullWhen(true)] out StatusRequestPacket? result)
+        {
+            result = new StatusRequestPacket();
+            return true;
+        }
+
+        public static StatusRequestPacket Deserialize(ref SequenceReader<byte> reader) => new();
     }
 }
