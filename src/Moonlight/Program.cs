@@ -1,9 +1,13 @@
 using System;
 using System.Globalization;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moonlight.Api;
+using Moonlight.Api.Events;
+using Moonlight.Api.Net;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -64,10 +68,82 @@ namespace Moonlight
                 logging.AddSerilog(serilogLoggerConfiguration.CreateLogger());
             });
 
+            serviceCollection.AddSingleton((serviceProvider) =>
+            {
+                PacketReaderFactory packetReaderFactory = new(serviceProvider.GetRequiredService<ILoggerFactory>());
+                packetReaderFactory.AddDefaultPacketDeserializers();
+                return packetReaderFactory;
+            });
+
+            serviceCollection.AddSingleton(typeof(AsyncServerEvent<>));
             serviceCollection.AddSingleton<ServerConfiguration>();
             serviceCollection.AddSingleton<Server>();
 
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+
+            // Register all event handlers
+            foreach (Type type in typeof(Program).Assembly.GetTypes())
+            {
+                foreach (MethodInfo method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
+                {
+                    ParameterInfo[] parameters = method.GetParameters();
+                    if (parameters.Length != 1 || !parameters[0].ParameterType.IsAssignableTo(typeof(AsyncServerEventArgs)))
+                    {
+                        continue;
+                    }
+
+                    object asyncServerEvent = serviceProvider.GetRequiredService(typeof(AsyncServerEvent<>).MakeGenericType(parameters[0].ParameterType));
+                    MethodInfo addPreHandler = asyncServerEvent.GetType().GetMethod("AddPreHandler") ?? throw new InvalidOperationException("Could not find the method 'AddPreHandler' in 'AsyncServerEvent<>'.");
+                    MethodInfo addPostHandler = asyncServerEvent.GetType().GetMethod("AddPostHandler") ?? throw new InvalidOperationException("Could not find the method 'AddPostHandler' in 'AsyncServerEvent<>'.");
+                    if (method.ReturnType == typeof(ValueTask<bool>))
+                    {
+                        if (method.IsStatic)
+                        {
+                            // Invoke void AddPreHandler(AsyncServerEventPreHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
+                            addPreHandler.Invoke(asyncServerEvent, [
+                                // Create a delegate of the method
+                                Delegate.CreateDelegate(typeof(AsyncServerEventPreHandler<>).MakeGenericType(parameters[0].ParameterType), method),
+                                // Normal priority
+                                AsyncServerEventPriority.Normal
+                            ]);
+                        }
+                        else
+                        {
+                            // Invoke void AddPreHandler(AsyncServerEventPreHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
+                            addPreHandler.Invoke(asyncServerEvent, [
+                                // Create a delegate of the method
+                                Delegate.CreateDelegate(typeof(AsyncServerEventPreHandler<>).MakeGenericType(parameters[0].ParameterType), ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, type), method),
+                                // Normal priority
+                                AsyncServerEventPriority.Normal
+                            ]);
+                        }
+                    }
+                    else
+                    {
+                        if (method.IsStatic)
+                        {
+                            // Invoke void AddPostHandler(AsyncServerEventHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
+                            addPostHandler.Invoke(asyncServerEvent, [
+                                // Create a delegate of the method
+                                Delegate.CreateDelegate(typeof(AsyncServerEventHandler<>).MakeGenericType(parameters[0].ParameterType), method),
+                                // Normal priority
+                                AsyncServerEventPriority.Normal
+                            ]);
+                        }
+                        else
+                        {
+                            // Invoke void AddPostHandler(AsyncServerEventHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
+                            addPostHandler.Invoke(asyncServerEvent, [
+                                // Create a delegate of the method
+                                Delegate.CreateDelegate(typeof(AsyncServerEventHandler<>).MakeGenericType(parameters[0].ParameterType), ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, type), method),
+                                // Normal priority
+                                AsyncServerEventPriority.Normal
+                            ]);
+                        }
+                    }
+                }
+            }
+
             Server server = serviceProvider.GetRequiredService<Server>();
             await server.StartAsync();
         }

@@ -1,15 +1,14 @@
-using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Moonlight.Api.Events;
+using Moonlight.Api.Events.EventArgs;
 using Moonlight.Api.Net;
 using Moonlight.Protocol.Net;
 
-[assembly: InternalsVisibleTo("Moonlight")]
 namespace Moonlight.Api
 {
     public sealed class Server
@@ -18,18 +17,22 @@ namespace Moonlight.Api
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         private readonly ILogger<Server> _logger;
-        private readonly ILoggerFactory _loggerProvider;
+        private readonly PacketReaderFactory _packetReaderFactory;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private readonly AsyncServerEvent<PacketReceivedAsyncServerEventArgs> _packetReceivedServerEvent;
 
-        public Server(ServerConfiguration configuration, ILoggerFactory? logger = null)
+        public Server(ServerConfiguration serverConfiguration, PacketReaderFactory packetReaderFactory, ILogger<Server> logger, AsyncServerEvent<PacketReceivedAsyncServerEventArgs> packetReceivedServerEvent)
         {
-            Configuration = configuration;
-            _loggerProvider = logger ?? NullLoggerFactory.Instance;
-            _logger = _loggerProvider.CreateLogger<Server>();
+            Configuration = serverConfiguration;
+            _packetReaderFactory = packetReaderFactory;
+            _logger = logger;
+            _packetReceivedServerEvent = packetReceivedServerEvent;
         }
 
         public async Task StartAsync()
         {
+            _packetReaderFactory.Prepare();
+
             _logger.LogInformation("Starting server...");
             TcpListener listener = new(IPAddress.Parse(Configuration.Host), Configuration.Port);
             listener.Start();
@@ -37,39 +40,36 @@ namespace Moonlight.Api
             _logger.LogInformation("Server started on {EndPoint}", listener.LocalEndpoint);
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-                TcpClient client = await listener.AcceptTcpClientAsync(CancellationToken);
-                _logger.LogInformation("Client connected: {EndPoint}", client.Client.RemoteEndPoint);
+                _ = HandleClientAsync(await listener.AcceptTcpClientAsync(CancellationToken));
+            }
+        }
 
-                // Try to read the handshake packet
-                PacketReader reader = new(client.GetStream(), _loggerProvider.CreateLogger<PacketReader>());
-                HandshakePacket handshake;
+        private async Task HandleClientAsync(TcpClient client)
+        {
+            _logger.LogInformation("Client connected: {EndPoint}", client.Client.RemoteEndPoint);
 
-                try
+            using NetworkStream stream = client.GetStream();
+            PacketReader reader = _packetReaderFactory.CreatePacketReader(stream);
+            try
+            {
+                HandshakePacket handshake = await reader.ReadPacketAsync<HandshakePacket>(CancellationToken);
+                if (await _packetReceivedServerEvent.InvokePreHandlersAsync(new PacketReceivedAsyncServerEventArgs(handshake, reader)))
                 {
-                    handshake = await reader.ReadPacketAsync<HandshakePacket>(CancellationToken);
-                    _logger.LogInformation("Handshake received: {Handshake}", handshake);
+                    await _packetReceivedServerEvent.InvokePostHandlersAsync(new PacketReceivedAsyncServerEventArgs(handshake, reader));
                 }
-                catch (InvalidOperationException error)
-                {
-                    _logger.LogError(error, "Failed to read handshake packet.");
-                    continue;
-                }
+            }
+            catch (InvalidDataException error)
+            {
+                _logger.LogError(error, "Error handling client: {EndPoint}", client.Client.RemoteEndPoint);
+                return;
+            }
 
-                while (!_cancellationTokenSource.IsCancellationRequested)
+            while (!CancellationToken.IsCancellationRequested)
+            {
+                IPacket packet = await reader.ReadPacketAsync(CancellationToken);
+                if (await _packetReceivedServerEvent.InvokePreHandlersAsync(new PacketReceivedAsyncServerEventArgs(packet, reader)))
                 {
-                    // Try to read the next packet
-                    IPacket packet;
-
-                    try
-                    {
-                        packet = await reader.ReadPacketAsync(CancellationToken);
-                        _logger.LogInformation("Packet received: {Packet}", packet);
-                    }
-                    catch (InvalidOperationException error)
-                    {
-                        _logger.LogError(error, "Failed to read packet.");
-                        break;
-                    }
+                    await _packetReceivedServerEvent.InvokePostHandlersAsync(new PacketReceivedAsyncServerEventArgs(packet, reader));
                 }
             }
         }

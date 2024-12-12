@@ -89,5 +89,6 @@ namespace Moonlight.Protocol.VariableTypes
 
         public static implicit operator VarInt(int value) => new(value);
         public static implicit operator int(VarInt value) => value.Value;
+        public override string ToString() => Value.ToString();
     }
 }

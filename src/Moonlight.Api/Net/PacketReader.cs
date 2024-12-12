@@ -1,68 +1,30 @@
 using System;
 using System.Buffers;
-using System.Collections.Frozen;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moonlight.Protocol.Net;
 using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Api.Net
 {
-    public sealed class PacketReader
+    public sealed class PacketReader : IDisposable
     {
-        private delegate IPacket DeserializeDelegate(ref SequenceReader<byte> reader);
-        private static readonly FrozenDictionary<int, DeserializeDelegate> _packetDeserializers;
-
-        public readonly PipeReader _pipeReader;
+        private readonly PacketReaderFactory _factory;
+        private readonly Stream _stream;
         private readonly ILogger<PacketReader> _logger;
+        private readonly PipeReader _pipeReader;
+        private object? _disposed;
 
-        static PacketReader()
+        public PacketReader(PacketReaderFactory factory, Stream stream, ILogger<PacketReader> logger)
         {
-            Dictionary<int, DeserializeDelegate> packetDeserializers = [];
-
-            // Iterate through the assembly and find all classes that implement IServerPacket<>
-            foreach (Type type in typeof(IServerPacket<>).Assembly.GetExportedTypes())
-            {
-                // Ensure we grab a fully implemented packet, not IServerPacket<> or an abstract class that implements it
-                if (!type.IsClass || type.IsAbstract)
-                {
-                    continue;
-                }
-
-                // Grab the generic argument of IServerPacket<>
-                Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IServerPacket<>))?.GetGenericArguments()[0];
-                if (packetType is null)
-                {
-                    continue;
-                }
-
-                // Grab the static Id property from Packet<>
-                VarInt packetId = (VarInt)type.GetProperty("Id", BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
-
-                // Grab the deserialize method
-                MethodInfo deserializeMethod = type.GetMethod("Deserialize", [(typeof(SequenceReader<byte>).MakeByRefType())])!;
-
-                // Convert the method into a delegate
-                DeserializeDelegate deserializeDelegate = (DeserializeDelegate)Delegate.CreateDelegate(typeof(DeserializeDelegate), null, deserializeMethod);
-
-                // Now we store the pointer in a dictionary for later use
-                packetDeserializers[packetId.Value] = deserializeDelegate;
-            }
-
-            _packetDeserializers = packetDeserializers.ToFrozenDictionary();
-        }
-
-        public PacketReader(Stream stream, ILogger<PacketReader>? logger = null)
-        {
-            _pipeReader = PipeReader.Create(stream);
-            _logger = logger ?? NullLogger<PacketReader>.Instance;
+            _factory = factory;
+            _stream = stream;
+            _pipeReader = PipeReader.Create(_stream);
+            _logger = logger;
         }
 
         public async ValueTask<T> ReadPacketAsync<T>(CancellationToken cancellationToken = default) where T : IPacket<T>
@@ -139,10 +101,10 @@ namespace Moonlight.Api.Net
             }
 
             VarInt packetId = VarInt.Deserialize(ref reader);
-            if (!_packetDeserializers.TryGetValue(packetId.Value, out DeserializeDelegate? packetDeserializerPointer))
+            if (!_factory.PreparedPacketDeserializers.TryGetValue(packetId.Value, out DeserializerDelegate? packetDeserializerPointer))
             {
                 // Grab the unknown packet deserializer
-                packetDeserializerPointer = _packetDeserializers[-1];
+                packetDeserializerPointer = _factory.PreparedPacketDeserializers[-1];
 
                 // Rewind so the unknown packet can store the received packet ID.
                 reader.Rewind(packetId.Length);
@@ -152,6 +114,17 @@ namespace Moonlight.Api.Net
             IPacket packet = packetDeserializerPointer(ref reader);
             position = reader.Position;
             return packet;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed is not null)
+            {
+                return;
+            }
+
+            _disposed = new object();
+            GC.SuppressFinalize(this);
         }
     }
 }
