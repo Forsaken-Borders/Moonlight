@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using Microsoft.Extensions.Configuration;
 using Moonlight.Api.Events;
 
 namespace Moonlight.Benchmarks
@@ -22,7 +23,7 @@ namespace Moonlight.Benchmarks
             List<AsyncServerEvent<AsyncServerEventArgs>> asyncEvents = [];
             foreach (int i in Enumerable.Range(0, Environment.ProcessorCount + 1).Where(x => x % 4 == 0).Append(1).Append(2).Append(5))
             {
-                AsyncServerEvent<AsyncServerEventArgs> asyncEvent = new();
+                AsyncServerEvent<AsyncServerEventArgs> asyncEvent = new(new ConfigurationBuilder().Build());
                 asyncEvents.Add(asyncEvent);
                 int j = 0;
                 while (j < i)

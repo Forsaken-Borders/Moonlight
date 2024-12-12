@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Moonlight.Api.Events
 {
@@ -14,8 +15,16 @@ namespace Moonlight.Api.Events
         private readonly Dictionary<AsyncServerEventPreHandler<TEventArgs>, AsyncServerEventPriority> _preHandlers = [];
         private readonly Dictionary<AsyncServerEventHandler<TEventArgs>, AsyncServerEventPriority> _postHandlers = [];
 
-        private AsyncServerEventPreHandler<TEventArgs> _preEventHandlerDelegate = _ => new ValueTask<bool>(true);
-        private AsyncServerEventHandler<TEventArgs> _postEventHandlerDelegate = _ => ValueTask.CompletedTask;
+        private AsyncServerEventPreHandler<TEventArgs> _preEventHandlerDelegate;
+        private AsyncServerEventHandler<TEventArgs> _postEventHandlerDelegate;
+        private readonly IConfiguration _configuration;
+
+        public AsyncServerEvent(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _preEventHandlerDelegate = LazyPreHandler;
+            _postEventHandlerDelegate = LazyPostHandler;
+        }
 
         public void AddPreHandler(AsyncServerEventPreHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal) => _preHandlers.Add(handler, priority);
         public void AddPostHandler(AsyncServerEventHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal) => _postHandlers.Add(handler, priority);
@@ -44,7 +53,7 @@ namespace Moonlight.Api.Events
             {
                 _preEventHandlerDelegate = async ValueTask<bool> (TEventArgs eventArgs) => await preHandlers[0](eventArgs) && await preHandlers[1](eventArgs);
             }
-            else if (preHandlers.Count < Math.Min(Environment.ProcessorCount, 8))
+            else if (!_configuration.GetValue("Moonlight:Events:Parallelize", false) || preHandlers.Count < _configuration.GetValue("Moonlight:Events:MinParallelHandlers", Environment.ProcessorCount))
             {
                 _preEventHandlerDelegate = async eventArgs =>
                 {
@@ -75,7 +84,7 @@ namespace Moonlight.Api.Events
             {
                 _postEventHandlerDelegate = postHandlers[0];
             }
-            else if (postHandlers.Count < Math.Min(Environment.ProcessorCount, 8))
+            else if (!_configuration.GetValue("Moonlight:Events:Parallelize", false) || postHandlers.Count < _configuration.GetValue("Moonlight:Events:MinParallelHandlers", Environment.ProcessorCount))
             {
                 _postEventHandlerDelegate = async (TEventArgs eventArgs) =>
                 {
@@ -92,9 +101,21 @@ namespace Moonlight.Api.Events
             }
         }
 
-        private ValueTask<bool> EmptyPreHandler(TEventArgs _) => ValueTask.FromResult(true);
-        private ValueTask EmptyPostHandler(TEventArgs _) => ValueTask.CompletedTask;
+        private static ValueTask<bool> EmptyPreHandler(TEventArgs _) => ValueTask.FromResult(true);
+        private static ValueTask EmptyPostHandler(TEventArgs _) => ValueTask.CompletedTask;
 
-        public override string ToString() => $"{PreHandlers.Count}, {PostHandlers.Count}";
+        private ValueTask<bool> LazyPreHandler(TEventArgs eventArgs)
+        {
+            Prepare();
+            return _preEventHandlerDelegate(eventArgs);
+        }
+
+        private ValueTask LazyPostHandler(TEventArgs eventArgs)
+        {
+            Prepare();
+            return _postEventHandlerDelegate(eventArgs);
+        }
+
+        public override string ToString() => $"{GetType()}, PreHandlers: {_preHandlers.Count}, PostHandlers: {_postHandlers.Count}";
     }
 }

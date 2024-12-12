@@ -1,6 +1,4 @@
-using System;
-
 namespace Moonlight.Api.Events
 {
-    public class AsyncServerEventArgs : EventArgs;
+    public class AsyncServerEventArgs : System.EventArgs;
 }
