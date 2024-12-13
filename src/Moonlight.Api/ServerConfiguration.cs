@@ -12,6 +12,8 @@ namespace Moonlight.Api
         public ushort Port { get; init; }
         public string Motd => _configuration.GetValue("Motd", "&#6b73dbA Moonlight Server")!;
         public uint MaxPlayers => _configuration.GetValue<uint>("MaxPlayers", 100);
+        public TimeSpan KeepAliveInterval => TimeSpan.FromSeconds(_configuration.GetValue("KeepAliveInterval", 10));
+        public TimeSpan ClientTimeout => TimeSpan.FromSeconds(_configuration.GetValue("ClientTimeout", 30));
 
         public ServerConfiguration(IConfiguration configuration)
         {

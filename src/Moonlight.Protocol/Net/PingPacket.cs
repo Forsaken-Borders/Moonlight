@@ -8,15 +8,12 @@ namespace Moonlight.Protocol.Net
     public record PingPacket : IServerPacket<PingPacket>
     {
         public static VarInt Id { get; } = 0x01;
-        public VarLong Payload { get; init; }
-
-        public PingPacket(long payload) => Payload = payload;
+        public required VarLong Payload { get; init; }
 
         public int CalculateSize() => Id.Length + Payload.Length;
 
         public int Serialize(Span<byte> target)
         {
-            target.Clear();
             int position = Id.Serialize(target);
             position += Payload.Serialize(target[position..]);
             return position;
@@ -24,9 +21,13 @@ namespace Moonlight.Protocol.Net
 
         public static bool TryDeserialize(ref SequenceReader<byte> reader, [NotNullWhen(true)] out PingPacket? result)
         {
-            if (VarInt.TryDeserialize(ref reader, out VarInt id) && id == Id && VarLong.TryDeserialize(ref reader, out VarLong payload))
+            if (VarLong.TryDeserialize(ref reader, out VarLong payload))
             {
-                result = new PingPacket(payload);
+                result = new PingPacket()
+                {
+                    Payload = payload
+                };
+
                 return true;
             }
 
@@ -34,6 +35,9 @@ namespace Moonlight.Protocol.Net
             return false;
         }
 
-        public static PingPacket Deserialize(ref SequenceReader<byte> reader) => new(VarLong.Deserialize(ref reader));
+        public static PingPacket Deserialize(ref SequenceReader<byte> reader) => new()
+        {
+            Payload = VarLong.Deserialize(ref reader)
+        };
     }
 }

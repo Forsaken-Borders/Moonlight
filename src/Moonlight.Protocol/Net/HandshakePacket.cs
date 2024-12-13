@@ -1,37 +1,18 @@
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Protocol.Net
 {
-    public record HandshakePacket : IServerPacket<HandshakePacket>
+    public record HandshakePacket : IPacket<HandshakePacket>
     {
         public static VarInt Id { get; } = 0x00;
-        public VarInt ProtocolVersion { get; init; }
-        public string ServerAddress { get; init; }
-        public ushort ServerPort { get; init; }
-        public VarInt NextState { get; init; }
-
-        public HandshakePacket(VarInt protocolVersion, string serverAddress, ushort serverPort, VarInt nextState)
-        {
-            try
-            {
-                Dns.GetHostEntry(serverAddress);
-            }
-            catch (Exception error)
-            {
-                throw new ArgumentException("Invalid server address.", nameof(serverAddress), error);
-            }
-
-            ProtocolVersion = protocolVersion;
-            ServerAddress = serverAddress;
-            ServerPort = serverPort;
-            NextState = nextState;
-        }
+        public required VarInt ProtocolVersion { get; init; }
+        public required string ServerAddress { get; init; }
+        public required ushort ServerPort { get; init; }
+        public required VarInt NextState { get; init; }
 
         public int CalculateSize() => Id.Length + ProtocolVersion.Length + Encoding.UTF8.GetByteCount(ServerAddress) + sizeof(ushort) + NextState.Length;
 
@@ -87,7 +68,14 @@ namespace Moonlight.Protocol.Net
                 return false;
             }
 
-            result = new HandshakePacket(protocolVersion, serverAddress, Unsafe.As<short, ushort>(ref serverPort), nextState);
+            result = new HandshakePacket()
+            {
+                ProtocolVersion = protocolVersion,
+                ServerAddress = serverAddress,
+                ServerPort = (ushort)serverPort,
+                NextState = nextState
+            };
+
             return true;
         }
 
@@ -120,7 +108,13 @@ namespace Moonlight.Protocol.Net
                 throw new InvalidOperationException("Unable to read next state.");
             }
 
-            return new HandshakePacket(protocolVersion, serverAddress, (ushort)serverPort, nextState);
+            return new HandshakePacket()
+            {
+                ProtocolVersion = protocolVersion,
+                ServerAddress = serverAddress,
+                ServerPort = (ushort)serverPort,
+                NextState = nextState
+            };
         }
     }
 }

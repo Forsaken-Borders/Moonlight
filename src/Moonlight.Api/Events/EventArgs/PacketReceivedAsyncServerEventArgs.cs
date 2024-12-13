@@ -5,13 +5,7 @@ namespace Moonlight.Api.Events.EventArgs
 {
     public sealed class PacketReceivedAsyncServerEventArgs : AsyncServerEventArgs
     {
-        public PacketReader Reader { get; init; }
-        public IPacket Packet { get; init; }
-
-        public PacketReceivedAsyncServerEventArgs(IPacket packet, PacketReader reader)
-        {
-            Packet = packet;
-            Reader = reader;
-        }
+        public required PacketReader Reader { get; init; }
+        public required IPacket Packet { get; init; }
     }
 }

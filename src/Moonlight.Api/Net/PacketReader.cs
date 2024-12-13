@@ -27,18 +27,42 @@ namespace Moonlight.Api.Net
             _logger = logger;
         }
 
-        public async ValueTask<T> ReadPacketAsync<T>(CancellationToken cancellationToken = default) where T : IPacket<T>
+        public async ValueTask<ReadOnlySequence<byte>?> TryReadSequenceAsync(CancellationToken cancellationToken = default)
         {
             ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
             if (readResult.IsCanceled || cancellationToken.IsCancellationRequested)
             {
+                return null;
+            }
+
+            _logger.LogDebug("Read Buffer ({Bytes:N0} bytes): [{Buffer}]", readResult.Buffer.Length, string.Join(", ", readResult.Buffer.ToArray().Select(b => b.ToString("X2"))));
+            return readResult.Buffer;
+        }
+
+        public async ValueTask<ReadOnlySequence<byte>> TryReadAtLeastSequenceAsync(int minimumBytes, CancellationToken cancellationToken = default)
+        {
+            while (true)
+            {
+                if (await TryReadSequenceAsync(cancellationToken) is ReadOnlySequence<byte> sequence && sequence.Length >= minimumBytes)
+                {
+                    return sequence;
+                }
+            }
+        }
+
+        public void AdvanceTo(SequencePosition position) => _pipeReader.AdvanceTo(position);
+
+        public async ValueTask<T> ReadPacketAsync<T>(CancellationToken cancellationToken = default) where T : IPacket<T>
+        {
+            if (await TryReadSequenceAsync(cancellationToken) is not ReadOnlySequence<byte> sequence)
+            {
                 throw new OperationCanceledException();
             }
 
-            T? packet = ReadPacket<T>(readResult.Buffer, out SequencePosition position);
+            T? packet = ReadPacket<T>(sequence, out SequencePosition position);
             if (packet is null)
             {
-                _pipeReader.AdvanceTo(readResult.Buffer.Start, position);
+                _pipeReader.AdvanceTo(sequence.Start, position);
                 return await ReadPacketAsync<T>(cancellationToken);
             }
 
@@ -48,18 +72,15 @@ namespace Moonlight.Api.Net
 
         public async ValueTask<IPacket> ReadPacketAsync(CancellationToken cancellationToken = default)
         {
-            ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
-            if (readResult.IsCanceled || cancellationToken.IsCancellationRequested)
+            if (await TryReadSequenceAsync(cancellationToken) is not ReadOnlySequence<byte> sequence)
             {
                 throw new OperationCanceledException();
             }
 
-            _logger.LogInformation("Read {Bytes} bytes", readResult.Buffer.Length);
-            _logger.LogDebug("Buffer: [{Buffer}]", string.Join(", ", readResult.Buffer.ToArray().Select(b => b.ToString("X2"))));
-            IPacket? packet = ReadPacket(readResult.Buffer, out SequencePosition position);
+            IPacket? packet = ReadPacket(sequence, out SequencePosition position);
             if (packet is null)
             {
-                _pipeReader.AdvanceTo(readResult.Buffer.Start, position);
+                _pipeReader.AdvanceTo(sequence.Start, position);
                 return await ReadPacketAsync(cancellationToken);
             }
 
@@ -84,7 +105,7 @@ namespace Moonlight.Api.Net
                 throw new InvalidDataException($"Expected packet ID {T.Id}, but got {packetId}");
             }
 
-            reader = new(reader.Sequence.Slice(reader.Position, length.Value));
+            reader = new(reader.Sequence.Slice(reader.Position, length.Value - packetId.Length));
             T packet = T.Deserialize(ref reader);
             position = reader.Position;
             return packet;
@@ -110,7 +131,7 @@ namespace Moonlight.Api.Net
                 reader.Rewind(packetId.Length);
             }
 
-            reader = new(reader.Sequence.Slice(reader.Position, length.Value));
+            reader = new(reader.Sequence.Slice(reader.Position, length.Value - packetId.Length));
             IPacket packet = packetDeserializerPointer(ref reader);
             position = reader.Position;
             return packet;
@@ -124,6 +145,8 @@ namespace Moonlight.Api.Net
             }
 
             _disposed = new object();
+            _pipeReader.Complete();
+            _stream.Dispose();
             GC.SuppressFinalize(this);
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,11 +76,28 @@ namespace Moonlight
                 return packetReaderFactory;
             });
 
-            serviceCollection.AddSingleton(typeof(AsyncServerEvent<>));
+            serviceCollection.AddSingleton<AsyncServerEventContainer>();
+            serviceCollection.AddKeyedSingleton("Moonlight.Handshake", (serviceProvider, key) =>
+            {
+                PacketReaderFactory packetReaderFactory = ActivatorUtilities.CreateInstance<PacketReaderFactory>(serviceProvider);
+                packetReaderFactory.AddDefaultPacketDeserializers();
+                packetReaderFactory.Prepare();
+                return packetReaderFactory;
+            });
+
+            serviceCollection.AddKeyedSingleton("Moonlight.Play", (serviceProvider, key) =>
+            {
+                PacketReaderFactory packetReaderFactory = ActivatorUtilities.CreateInstance<PacketReaderFactory>(serviceProvider);
+                packetReaderFactory.AddDefaultPacketDeserializers();
+                packetReaderFactory.Prepare();
+                return packetReaderFactory;
+            });
+
             serviceCollection.AddSingleton<ServerConfiguration>();
             serviceCollection.AddSingleton<Server>();
 
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+            AsyncServerEventContainer asyncServerEventContainer = serviceProvider.GetRequiredService<AsyncServerEventContainer>();
 
             // Register all event handlers
             foreach (Type type in typeof(Program).Assembly.GetTypes())
@@ -91,55 +109,21 @@ namespace Moonlight
                     {
                         continue;
                     }
-
-                    object asyncServerEvent = serviceProvider.GetRequiredService(typeof(AsyncServerEvent<>).MakeGenericType(parameters[0].ParameterType));
-                    MethodInfo addPreHandler = asyncServerEvent.GetType().GetMethod("AddPreHandler") ?? throw new InvalidOperationException("Could not find the method 'AddPreHandler' in 'AsyncServerEvent<>'.");
-                    MethodInfo addPostHandler = asyncServerEvent.GetType().GetMethod("AddPostHandler") ?? throw new InvalidOperationException("Could not find the method 'AddPostHandler' in 'AsyncServerEvent<>'.");
-                    if (method.ReturnType == typeof(ValueTask<bool>))
+                    else if (method.ReturnType == typeof(ValueTask<bool>))
                     {
-                        if (method.IsStatic)
-                        {
-                            // Invoke void AddPreHandler(AsyncServerEventPreHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
-                            addPreHandler.Invoke(asyncServerEvent, [
-                                // Create a delegate of the method
-                                Delegate.CreateDelegate(typeof(AsyncServerEventPreHandler<>).MakeGenericType(parameters[0].ParameterType), method),
-                                // Normal priority
-                                AsyncServerEventPriority.Normal
-                            ]);
-                        }
-                        else
-                        {
-                            // Invoke void AddPreHandler(AsyncServerEventPreHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
-                            addPreHandler.Invoke(asyncServerEvent, [
-                                // Create a delegate of the method
-                                Delegate.CreateDelegate(typeof(AsyncServerEventPreHandler<>).MakeGenericType(parameters[0].ParameterType), ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, type), method),
-                                // Normal priority
-                                AsyncServerEventPriority.Normal
-                            ]);
-                        }
+                        Delegate genericHandler = method.IsStatic
+                            ? Delegate.CreateDelegate(typeof(AsyncServerEventPreHandler<>).MakeGenericType(parameters[0].ParameterType), method)
+                            : Delegate.CreateDelegate(typeof(AsyncServerEventPreHandler<>).MakeGenericType(parameters[0].ParameterType), ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, type), method);
+
+                        asyncServerEventContainer.AddPreHandler(parameters[0].ParameterType, Unsafe.As<AsyncServerEventPreHandler>(genericHandler), AsyncServerEventPriority.Normal);
                     }
                     else
                     {
-                        if (method.IsStatic)
-                        {
-                            // Invoke void AddPostHandler(AsyncServerEventHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
-                            addPostHandler.Invoke(asyncServerEvent, [
-                                // Create a delegate of the method
-                                Delegate.CreateDelegate(typeof(AsyncServerEventHandler<>).MakeGenericType(parameters[0].ParameterType), method),
-                                // Normal priority
-                                AsyncServerEventPriority.Normal
-                            ]);
-                        }
-                        else
-                        {
-                            // Invoke void AddPostHandler(AsyncServerEventHandler<TEventArgs> handler, AsyncServerEventPriority priority = AsyncServerEventPriority.Normal)
-                            addPostHandler.Invoke(asyncServerEvent, [
-                                // Create a delegate of the method
-                                Delegate.CreateDelegate(typeof(AsyncServerEventHandler<>).MakeGenericType(parameters[0].ParameterType), ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, type), method),
-                                // Normal priority
-                                AsyncServerEventPriority.Normal
-                            ]);
-                        }
+                        Delegate genericHandler = method.IsStatic
+                            ? Delegate.CreateDelegate(typeof(AsyncServerEventHandler<>).MakeGenericType(parameters[0].ParameterType), method)
+                            : Delegate.CreateDelegate(typeof(AsyncServerEventHandler<>).MakeGenericType(parameters[0].ParameterType), ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, type), method);
+
+                        asyncServerEventContainer.AddPostHandler(parameters[0].ParameterType, Unsafe.As<AsyncServerEventHandler>(genericHandler), AsyncServerEventPriority.Normal);
                     }
                 }
             }

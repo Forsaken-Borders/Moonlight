@@ -5,7 +5,7 @@ using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Protocol.Net
 {
-    public record StatusRequestPacket : IPacket<StatusRequestPacket>
+    public record StatusRequestPacket : IServerPacket<StatusRequestPacket>
     {
         public static VarInt Id { get; } = 0x00;
 
@@ -13,7 +13,6 @@ namespace Moonlight.Protocol.Net
 
         public int Serialize(Span<byte> target)
         {
-            target.Clear();
             int position = Id.Serialize(target);
             return position;
         }

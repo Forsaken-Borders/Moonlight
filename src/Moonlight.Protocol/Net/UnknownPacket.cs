@@ -21,7 +21,6 @@ namespace Moonlight.Protocol.Net
 
         public int Serialize(Span<byte> target)
         {
-            target.Clear();
             int position = Id.Serialize(target);
             Data.Span.CopyTo(target[position..]);
             return position + Data.Length;
