@@ -11,15 +11,15 @@ using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Api.Net
 {
-    public sealed class PacketReader : IDisposable
+    public sealed class PacketHandler : IDisposable
     {
-        private readonly PacketReaderFactory _factory;
+        private readonly PacketHandlerFactory _factory;
         private readonly Stream _stream;
-        private readonly ILogger<PacketReader> _logger;
+        private readonly ILogger<PacketHandler> _logger;
         private readonly PipeReader _pipeReader;
         private object? _disposed;
 
-        public PacketReader(PacketReaderFactory factory, Stream stream, ILogger<PacketReader> logger)
+        public PacketHandler(PacketHandlerFactory factory, Stream stream, ILogger<PacketHandler> logger)
         {
             _factory = factory;
             _stream = stream;
@@ -125,7 +125,7 @@ namespace Moonlight.Api.Net
             if (!_factory.PreparedPacketDeserializers.TryGetValue(packetId.Value, out DeserializerDelegate? packetDeserializerPointer))
             {
                 // Grab the unknown packet deserializer
-                packetDeserializerPointer = _factory.PreparedPacketDeserializers[-1];
+                packetDeserializerPointer = UnknownPacket.Deserialize;
 
                 // Rewind so the unknown packet can store the received packet ID.
                 reader.Rewind(packetId.Length);

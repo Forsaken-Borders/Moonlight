@@ -3,9 +3,9 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using Moonlight.Protocol.VariableTypes;
 
-namespace Moonlight.Protocol.Net
+namespace Moonlight.Protocol.Net.StatusState
 {
-    public record StatusRequestPacket : IServerPacket<StatusRequestPacket>
+    public record StatusRequestPacket : IStatusPacket<StatusRequestPacket>
     {
         public static VarInt Id { get; } = 0x00;
 

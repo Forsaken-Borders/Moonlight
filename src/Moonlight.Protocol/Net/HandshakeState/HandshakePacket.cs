@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Moonlight.Protocol.VariableTypes;
 
-namespace Moonlight.Protocol.Net
+namespace Moonlight.Protocol.Net.HandshakeState
 {
     public record HandshakePacket : IPacket<HandshakePacket>
     {

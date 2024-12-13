@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moonlight.Api.Events;
 using Moonlight.Api.Events.EventArgs;
 using Moonlight.Api.Net;
-using Moonlight.Protocol.Net;
+using Moonlight.Protocol.Net.HandshakeState;
 
 namespace Moonlight.Api
 {
@@ -20,8 +20,8 @@ namespace Moonlight.Api
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
         private readonly ILogger<Server> _logger;
-        private readonly PacketReaderFactory _playPacketReaderFactory;
-        private readonly PacketReaderFactory _handshakePacketReaderFactory;
+        private readonly PacketHandlerFactory _playPacketReaderFactory;
+        private readonly PacketHandlerFactory _handshakePacketReaderFactory;
         private readonly CancellationTokenSource _cancellationTokenSource = new();
 
         private readonly AsyncServerEvent<PacketReceivedAsyncServerEventArgs> _packetReceivedServerEvent;
@@ -30,8 +30,8 @@ namespace Moonlight.Api
         public Server(ServerConfiguration serverConfiguration, IServiceProvider serviceProvider, AsyncServerEventContainer asyncServerEventContainer, ILogger<Server> logger)
         {
             Configuration = serverConfiguration;
-            _handshakePacketReaderFactory = serviceProvider.GetRequiredKeyedService<PacketReaderFactory>("Moonlight.Handshake");
-            _playPacketReaderFactory = serviceProvider.GetRequiredKeyedService<PacketReaderFactory>("Moonlight.Play");
+            _handshakePacketReaderFactory = serviceProvider.GetRequiredKeyedService<PacketHandlerFactory>("Moonlight.Handshake");
+            _playPacketReaderFactory = serviceProvider.GetRequiredKeyedService<PacketHandlerFactory>("Moonlight.Play");
             _logger = logger;
 
             _packetReceivedServerEvent = asyncServerEventContainer.GetAsyncServerEvent<PacketReceivedAsyncServerEventArgs>();
@@ -72,7 +72,7 @@ namespace Moonlight.Api
 
             _logger.LogInformation("Client connected: {EndPoint}", client.Client.RemoteEndPoint);
 
-            using PacketReader reader = _handshakePacketReaderFactory.CreatePacketReader(client.GetStream());
+            using PacketHandler reader = _handshakePacketReaderFactory.Create(client.GetStream());
             if (await reader.TryReadSequenceAsync(CancellationToken) is ReadOnlySequence<byte> sequence)
             {
                 if (!TryParseLegacyPing(sequence, out SequencePosition position, out HandshakePacket? handshakePacket))
@@ -112,7 +112,7 @@ namespace Moonlight.Api
             _logger.LogInformation("Client disconnected: {EndPoint}", client.Client.RemoteEndPoint);
         }
 
-        private async Task HandleServerStatusAsync(TcpClient client, PacketReader reader)
+        private async Task HandleServerStatusAsync(TcpClient client, PacketHandler reader)
         {
             CancellationTokenSource clientTimeoutCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
 
@@ -140,6 +140,6 @@ namespace Moonlight.Api
         }
 
         // TODO: Disconnect immediately.
-        private Task HandleLoginAsync(PacketReader reader) => Task.CompletedTask;
+        private Task HandleLoginAsync(PacketHandler reader) => Task.CompletedTask;
     }
 }

@@ -3,9 +3,9 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using Moonlight.Protocol.VariableTypes;
 
-namespace Moonlight.Protocol.Net
+namespace Moonlight.Protocol.Net.StatusState
 {
-    public record PingPacket : IServerPacket<PingPacket>
+    public record PingPacket : IStatusPacket<PingPacket>
     {
         public static VarInt Id { get; } = 0x01;
         public required VarLong Payload { get; init; }

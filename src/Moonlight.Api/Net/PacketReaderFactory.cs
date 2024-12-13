@@ -14,33 +14,33 @@ namespace Moonlight.Api.Net
 {
     public delegate IPacket DeserializerDelegate(ref SequenceReader<byte> reader);
 
-    public sealed class PacketReaderFactory
+    public sealed class PacketHandlerFactory
     {
         public Dictionary<int, DeserializerDelegate> PacketDeserializers { get; init; } = [];
         public FrozenDictionary<int, DeserializerDelegate> PreparedPacketDeserializers { get; private set; } = FrozenDictionary<int, DeserializerDelegate>.Empty;
 
         private readonly ILoggerFactory _loggerFactory;
 
-        public PacketReaderFactory(ILoggerFactory loggerFactory) => _loggerFactory = loggerFactory;
+        public PacketHandlerFactory(ILoggerFactory loggerFactory) => _loggerFactory = loggerFactory;
 
         public void Prepare() => PreparedPacketDeserializers = PacketDeserializers.ToFrozenDictionary();
 
-        public PacketReader CreatePacketReader(Stream stream) => new(this, stream, _loggerFactory.CreateLogger<PacketReader>());
+        public PacketHandler Create(Stream stream) => new(this, stream, _loggerFactory.CreateLogger<PacketHandler>());
 
-        public void AddPacketDeserializer<T>(T serverPacket) where T : IServerPacket<T> =>
+        public void AddPacketDeserializer<T>(T serverPacket) where T : IPacket<T> =>
             PacketDeserializers[T.Id] = (DeserializerDelegate)Delegate.CreateDelegate(typeof(T), serverPacket, ((Delegate)T.Deserialize).Method);
 
-        public void AddPacketDeserializer<T>() where T : IServerPacket<T> => PacketDeserializers[T.Id] = Unsafe.As<DeserializerDelegate>((Delegate)T.Deserialize);
+        public void AddPacketDeserializer<T>() where T : IPacket<T> => PacketDeserializers[T.Id] = Unsafe.As<DeserializerDelegate>((Delegate)T.Deserialize);
         public void AddPacketDeserializer(Type type)
         {
             if (type.IsAbstract)
             {
                 throw new InvalidOperationException("Cannot use an abstract class as a packet deserializer.");
             }
-            // See if the type implements IServerPacket<>
-            else if (type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IServerPacket<>))?.GetGenericArguments()[0] is null)
+            // See if the type implements IPacket<>
+            else if (type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPacket<>))?.GetGenericArguments()[0] is null)
             {
-                throw new InvalidOperationException("Cannot use a class that does not implement IServerPacket<> as a packet deserializer.");
+                throw new InvalidOperationException("Cannot use a class that does not implement IPacket<> as a packet deserializer.");
             }
             // Grab the IPacket<>.Id property
             else if (type.GetProperty("Id", BindingFlags.Public | BindingFlags.Static)!.GetValue(null) is not VarInt packetId)
@@ -67,7 +67,7 @@ namespace Moonlight.Api.Net
                 throw new InvalidOperationException("Cannot use an abstract class as a packet deserializer.");
             }
 
-            Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IServerPacket<>))?.GetGenericArguments()[0];
+            Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPacket<>))?.GetGenericArguments()[0];
             if (packetType is null)
             {
                 return;
@@ -78,23 +78,23 @@ namespace Moonlight.Api.Net
             PacketDeserializers[packetId] = deserializeDelegate;
         }
 
-        public void AddDefaultPacketDeserializers() => AddPacketDeserializers(typeof(IServerPacket<>).Assembly.GetExportedTypes());
+        public void AddDefaultPacketDeserializers() => AddPacketDeserializers(typeof(IPacket<>).Assembly.GetExportedTypes());
 
         public void AddPacketDeserializers(IEnumerable<Type> types)
         {
-            ILogger<PacketReaderFactory> logger = _loggerFactory.CreateLogger<PacketReaderFactory>();
+            ILogger<PacketHandlerFactory> logger = _loggerFactory.CreateLogger<PacketHandlerFactory>();
 
-            // Iterate through the assembly and find all classes that implement IServerPacket<>
+            // Iterate through the assembly and find all classes that implement IPacket<>
             foreach (Type type in types)
             {
-                // Ensure we grab a fully implemented packet, not IServerPacket<> or an abstract class that implements it
+                // Ensure we grab a fully implemented packet, not IPacket<> or an abstract class that implements it
                 if (type.IsAbstract)
                 {
                     continue;
                 }
 
-                // Grab the generic argument of IServerPacket<>
-                Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IServerPacket<>))?.GetGenericArguments()[0];
+                // Grab the generic argument of IPacket<>
+                Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPacket<>))?.GetGenericArguments()[0];
                 if (packetType is null)
                 {
                     continue;
@@ -121,7 +121,7 @@ namespace Moonlight.Api.Net
         }
 
         public void RemovePacketDeserializer(int packetId) => PacketDeserializers.Remove(packetId);
-        public void RemovePacketDeserializer<T>() where T : IServerPacket<T> => PacketDeserializers.Remove(T.Id);
+        public void RemovePacketDeserializer<T>() where T : IPacket<T> => PacketDeserializers.Remove(T.Id);
         public void RemovePacketDeserializer(Type type)
         {
             if (type.IsAbstract)
@@ -129,7 +129,7 @@ namespace Moonlight.Api.Net
                 return;
             }
 
-            Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IServerPacket<>))?.GetGenericArguments()[0];
+            Type? packetType = type.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IPacket<>))?.GetGenericArguments()[0];
             if (packetType is null)
             {
                 return;

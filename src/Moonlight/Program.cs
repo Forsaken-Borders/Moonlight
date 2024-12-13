@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Moonlight.Api;
 using Moonlight.Api.Events;
 using Moonlight.Api.Net;
+using Moonlight.Protocol.Net.LoginState;
+using Moonlight.Protocol.Net.StatusState;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -71,7 +74,7 @@ namespace Moonlight
 
             serviceCollection.AddSingleton((serviceProvider) =>
             {
-                PacketReaderFactory packetReaderFactory = new(serviceProvider.GetRequiredService<ILoggerFactory>());
+                PacketHandlerFactory packetReaderFactory = new(serviceProvider.GetRequiredService<ILoggerFactory>());
                 packetReaderFactory.AddDefaultPacketDeserializers();
                 return packetReaderFactory;
             });
@@ -79,16 +82,16 @@ namespace Moonlight
             serviceCollection.AddSingleton<AsyncServerEventContainer>();
             serviceCollection.AddKeyedSingleton("Moonlight.Handshake", (serviceProvider, key) =>
             {
-                PacketReaderFactory packetReaderFactory = ActivatorUtilities.CreateInstance<PacketReaderFactory>(serviceProvider);
-                packetReaderFactory.AddDefaultPacketDeserializers();
+                PacketHandlerFactory packetReaderFactory = ActivatorUtilities.CreateInstance<PacketHandlerFactory>(serviceProvider);
+                packetReaderFactory.AddPacketDeserializers(typeof(IStatusPacket<>).Assembly.GetExportedTypes().Where(type => type.GetInterfaces().Any(@interface => @interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(IStatusPacket<>))));
                 packetReaderFactory.Prepare();
                 return packetReaderFactory;
             });
 
             serviceCollection.AddKeyedSingleton("Moonlight.Play", (serviceProvider, key) =>
             {
-                PacketReaderFactory packetReaderFactory = ActivatorUtilities.CreateInstance<PacketReaderFactory>(serviceProvider);
-                packetReaderFactory.AddDefaultPacketDeserializers();
+                PacketHandlerFactory packetReaderFactory = ActivatorUtilities.CreateInstance<PacketHandlerFactory>(serviceProvider);
+                packetReaderFactory.AddPacketDeserializers(typeof(ILoginPacket<>).Assembly.GetExportedTypes().Where(type => type.GetInterfaces().Any(@interface => @interface.IsGenericType && @interface.GetGenericTypeDefinition() == typeof(ILoginPacket<>))));
                 packetReaderFactory.Prepare();
                 return packetReaderFactory;
             });
