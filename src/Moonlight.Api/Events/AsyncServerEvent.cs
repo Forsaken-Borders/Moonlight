@@ -32,6 +32,17 @@ namespace Moonlight.Api.Events
         public bool RemovePreHandler(AsyncServerEventPreHandler<TEventArgs> handler) => _preHandlers.Remove(handler);
         public bool RemovePostHandler(AsyncServerEventHandler<TEventArgs> handler) => _postHandlers.Remove(handler);
 
+        public async ValueTask<bool> InvokeAsync(TEventArgs eventArgs)
+        {
+            if (await InvokePreHandlersAsync(eventArgs))
+            {
+                await InvokePostHandlersAsync(eventArgs);
+                return true;
+            }
+
+            return false;
+        }
+
         public ValueTask<bool> InvokePreHandlersAsync(TEventArgs eventArgs) => _preEventHandlerDelegate(eventArgs);
         public ValueTask InvokePostHandlersAsync(TEventArgs eventArgs) => _postEventHandlerDelegate(eventArgs);
 
