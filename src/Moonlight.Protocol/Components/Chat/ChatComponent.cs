@@ -1,14 +1,14 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text.Json.Serialization;
 
 namespace Moonlight.Protocol.Components.Chat
 {
     public record ChatComponent : Component
     {
-        [JsonPropertyName("text")]
-        public string Text { get; init; }
+        public required string Text { get; init; }
 
+        [SetsRequiredMembers]
         public ChatComponent(ChatComponentBuilder builder)
         {
             Text = builder.Text;
@@ -21,12 +21,13 @@ namespace Moonlight.Protocol.Components.Chat
             ClickEvent = builder.ClickEvent;
             HoverEvent = builder.HoverEvent;
             Insertion = builder.Insertion;
-            Extra = builder.Extra.Select(x => new ChatComponent(x)).ToArray();
+            Extra = builder.Extra.Count == 0 ? null : builder.Extra.Select(x => new ChatComponent(x)).ToArray();
         }
 
-        public ChatComponent(params string[] text) : this(new ChatComponentBuilder(text[0]))
+        [SetsRequiredMembers]
+        public ChatComponent(params string[] text) : this(ChatComponentBuilder.Parse(text[0]))
         {
-            List<ChatComponent> extra = new();
+            List<ChatComponent> extra = [];
             for (int i = 1; i < text.Length; i++)
             {
                 extra.Add(new ChatComponent(ChatComponentBuilder.Parse(text[i])));

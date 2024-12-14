@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -11,12 +12,13 @@ using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Api.Net
 {
-    public sealed class PacketHandler : IDisposable
+    public sealed partial class PacketHandler : IDisposable
     {
         private readonly PacketHandlerFactory _factory;
         private readonly Stream _stream;
         private readonly ILogger<PacketHandler> _logger;
         private readonly PipeReader _pipeReader;
+        private readonly PipeWriter _pipeWriter;
         private object? _disposed;
 
         public PacketHandler(PacketHandlerFactory factory, Stream stream, ILogger<PacketHandler> logger)
@@ -24,11 +26,17 @@ namespace Moonlight.Api.Net
             _factory = factory;
             _stream = stream;
             _pipeReader = PipeReader.Create(_stream);
+            _pipeWriter = PipeWriter.Create(_stream);
             _logger = logger;
         }
 
         public async ValueTask<ReadOnlySequence<byte>?> TryReadSequenceAsync(CancellationToken cancellationToken = default)
         {
+            if (_disposed is not null)
+            {
+                return new ReadOnlySequence<byte>();
+            }
+
             ReadResult readResult = await _pipeReader.ReadAsync(cancellationToken);
             if (readResult.IsCanceled || cancellationToken.IsCancellationRequested)
             {
@@ -70,11 +78,15 @@ namespace Moonlight.Api.Net
             return packet;
         }
 
-        public async ValueTask<IPacket> ReadPacketAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<IPacket?> ReadPacketAsync(CancellationToken cancellationToken = default)
         {
             if (await TryReadSequenceAsync(cancellationToken) is not ReadOnlySequence<byte> sequence)
             {
                 throw new OperationCanceledException();
+            }
+            else if (sequence.Length == 0)
+            {
+                return null;
             }
 
             IPacket? packet = ReadPacket(sequence, out SequencePosition position);
@@ -137,6 +149,74 @@ namespace Moonlight.Api.Net
             return packet;
         }
 
+        public int WritePacket<T>(T packet) where T : IPacket<T>
+        {
+            VarInt length = T.Id.Length + T.CalculateSize(packet);
+            Span<byte> buffer = _pipeWriter.GetSpan(length.Length + length.Value);
+
+            // Write the total packet length
+            int position = VarInt.Serialize(length, buffer);
+
+            // Write the packet ID
+            position += VarInt.Serialize(T.Id, buffer[position..]);
+
+            // Write the packet data
+            position += T.Serialize(packet, buffer[position..]);
+
+            // Send the packet
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                StringBuilder stringBuilder = new();
+                foreach (byte b in buffer[..position])
+                {
+                    //stringBuilder.Append("0x");
+                    stringBuilder.Append(b);
+                    stringBuilder.Append(", ");
+                }
+
+                stringBuilder.Length -= 2;
+                _logger.LogTrace("Sent {PacketType} packet ({BufferSize}): [{Packet}]", packet.GetType(), position, stringBuilder.ToString());
+            }
+
+            _pipeWriter.Advance(position);
+            return position;
+        }
+
+        public int WritePacket(IPacket packet)
+        {
+            VarInt length = _factory.PreparedPacketSizeCalculators[packet.Id](packet);
+            Span<byte> buffer = _pipeWriter.GetSpan(length.Length + length.Value);
+
+            // Write the total packet length
+            int position = VarInt.Serialize(length, buffer);
+
+            // Write the packet ID
+            position += VarInt.Serialize(packet.Id, buffer[position..]);
+
+            // Write the packet data
+            position += _factory.PreparedPacketSerializers[packet.Id](packet, buffer[position..]);
+
+            // Send the packet
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                StringBuilder stringBuilder = new();
+                foreach (byte b in buffer[..position])
+                {
+                    //stringBuilder.Append("0x");
+                    stringBuilder.Append(b);
+                    stringBuilder.Append(", ");
+                }
+
+                stringBuilder.Length -= 2;
+                _logger.LogTrace("Sent {PacketType} packet ({BufferSize}): [{Packet}]", packet.GetType(), position, stringBuilder.ToString());
+            }
+
+            _pipeWriter.Advance(position);
+            return position;
+        }
+
+        public async ValueTask FlushAsync(CancellationToken cancellationToken = default) => await _pipeWriter.FlushAsync(cancellationToken);
+
         public void Dispose()
         {
             if (_disposed is not null)
@@ -146,6 +226,7 @@ namespace Moonlight.Api.Net
 
             _disposed = new object();
             _pipeReader.Complete();
+            _pipeWriter.Complete();
             _stream.Dispose();
             GC.SuppressFinalize(this);
         }

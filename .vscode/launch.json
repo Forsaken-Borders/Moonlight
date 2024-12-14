@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/src/Moonlight/bin/Debug/net9.0/linux-x64/Moonlight.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/Moonlight",
+            "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "stopAtEntry": false
         },

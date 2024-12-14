@@ -8,35 +8,31 @@ namespace Moonlight.Protocol.Components.Chat
 {
     public sealed class ChatComponentBuilder
     {
-        public string Text { get; set; }
-        public ChatFormatting Formatting { get; set; }
+        public required string Text { get; set; }
+        public ChatFormatting Formatting { get; set; } = ChatFormatting.None;
         public string? Insertion { get; set; }
-        public string Font { get; set; }
-        public Color Color { get; set; }
+        public string? Font { get; set; } = "minecraft:default";
+        public Color? Color { get; set; }
         public ChatClickEventComponent? ClickEvent { get; set; }
         public ChatHoverEventComponent? HoverEvent { get; set; }
-        public List<ChatComponentBuilder> Extra { get; set; }
-        public string? HexColor => Color == Color.Transparent ? null : ColorTranslator.ToHtml(Color);
+        public List<ChatComponentBuilder> Extra { get; set; } = [];
+        public string? HexColor => Color is null ? null : ColorTranslator.ToHtml(Color.Value);
 
-        public ChatComponentBuilder(string text)
-        {
-            Text = text;
-            Formatting = ChatFormatting.None;
-            Insertion = null;
-            Font = "minecraft:default";
-            Color = Color.Transparent;
-            Extra = new();
-        }
+        public ChatComponentBuilder() { }
 
         public void SetFont(ChatFontType font) => Font = "minecraft:" + font.ToString().ToLowerInvariant();
         public void SetFont<TEnum>(TEnum font, string @namespace = "minecraft") where TEnum : struct, Enum => Font = $"{@namespace}:{Enum.GetName(font)}";
         public void SetColor(Color color) => Color = color;
         public void SetColor(string hexColor) => Color = ColorTranslator.FromHtml(hexColor);
-        public bool IsPlainText() => Formatting == ChatFormatting.None && string.IsNullOrEmpty(Insertion) && Extra.All(x => x.IsPlainText()) && Font == "minecraft:default" && Color == Color.Transparent;
+        public bool IsPlainText() => Formatting == ChatFormatting.None && string.IsNullOrEmpty(Insertion) && Extra.All(x => x.IsPlainText()) && Font == "minecraft:default" && Color is null;
 
         public static ChatComponentBuilder Parse(string text)
         {
-            ChatComponentBuilder builder = new(string.Empty);
+            ChatComponentBuilder builder = new()
+            {
+                Text = string.Empty
+            };
+
             ChatComponentBuilder current = builder;
             StringBuilder textBuffer = new();
             ReadOnlySpan<char> span = text.AsSpan();
@@ -59,7 +55,11 @@ namespace Moonlight.Protocol.Components.Chat
                 {
                     current.Text = textBuffer.ToString();
                     textBuffer.Clear();
-                    current = new(string.Empty);
+                    current = new()
+                    {
+                        Text = string.Empty
+                    };
+
                     builder.Extra.Add(current);
                 }
 
@@ -124,7 +124,7 @@ namespace Moonlight.Protocol.Components.Chat
 
             builder.Append(FormattingCodes.SectionSign);
             builder.Append(FormattingCodes.StyleCodes.First(x => x.Value == Formatting).Key);
-            if (Color != Color.Transparent)
+            if (Color is not null)
             {
                 switch (colorMode)
                 {
@@ -140,7 +140,7 @@ namespace Moonlight.Protocol.Components.Chat
                         break;
                     case ChatColorMode.Translate:
                         builder.Append(FormattingCodes.SectionSign);
-                        builder.Append(FormattingCodes.GetClosestColor(FormattingCodes.ColorNames.Values, Color));
+                        builder.Append(FormattingCodes.GetClosestColor(FormattingCodes.ColorNames.Values, Color.Value));
                         break;
                     case ChatColorMode.Hex:
                         builder.Append(FormattingCodes.SectionSign);

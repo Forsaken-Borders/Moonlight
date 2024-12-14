@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Moonlight.Protocol.Components.Chat;
@@ -6,37 +7,39 @@ namespace Moonlight.Protocol.Components
 {
     public record Component
     {
-        [JsonPropertyName("bold")]
-        public bool Bold { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Bold { get; init; }
 
-        [JsonPropertyName("italic")]
-        public bool Italic { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Italic { get; init; }
 
-        [JsonPropertyName("underlined")]
-        public bool Underlined { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Underlined { get; init; }
 
-        [JsonPropertyName("strikethrough")]
-        public bool Strikethrough { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Strikethrough { get; init; }
 
-        [JsonPropertyName("obfuscated")]
-        public bool Obfuscated { get; init; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public bool? Obfuscated { get; init; }
 
-        [JsonPropertyName("font")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Font { get; init; }
 
-        [JsonPropertyName("color")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Color { get; init; }
 
-        [JsonPropertyName("insertion")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Insertion { get; init; }
 
-        [JsonPropertyName("clickEvent")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public IReadOnlyList<Component>? Extra { get; init; } = Array.Empty<Component>();
+
+        [JsonPropertyName("clickEvent"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ChatClickEventComponent? ClickEvent { get; init; }
 
-        [JsonPropertyName("hoverEvent")]
+        [JsonPropertyName("hoverEvent"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ChatHoverEventComponent? HoverEvent { get; init; }
 
-        [JsonPropertyName("extra")]
-        public IReadOnlyList<Component> Extra { get; init; } = new List<Component>();
+        public Component() { }
     }
 }

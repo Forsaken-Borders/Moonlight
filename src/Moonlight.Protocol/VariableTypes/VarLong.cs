@@ -1,16 +1,18 @@
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Moonlight.Protocol.VariableTypes
 {
     public readonly record struct VarLong : ISpanSerializable<VarLong>
     {
-        public long Value { get; init; }
-        public int Length { get; init; }
+        public required long Value { get; init; }
+        public required int Length { get; init; }
 
         private const int SEGMENT_BITS = 0x7F;
         private const int CONTINUE_BIT = 0x80;
 
+        [SetsRequiredMembers]
         public VarLong(long value)
         {
             Value = value;
@@ -21,10 +23,12 @@ namespace Moonlight.Protocol.VariableTypes
             } while (value != 0);
         }
 
-        public int Serialize(Span<byte> target)
+        public static int CalculateSize(VarLong varLong) => varLong.Length;
+
+        public static int Serialize(VarLong varLong, Span<byte> target)
         {
             target.Clear();
-            long value = Value;
+            ulong value = (ulong)varLong.Value;
             int position = 0;
             do
             {

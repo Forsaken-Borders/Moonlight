@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text;
 using Moonlight.Protocol.VariableTypes;
 
@@ -14,55 +15,30 @@ namespace Moonlight.Protocol.Net.HandshakeState
         public required ushort ServerPort { get; init; }
         public required VarInt NextState { get; init; }
 
-        public int CalculateSize() => Id.Length + ProtocolVersion.Length + Encoding.UTF8.GetByteCount(ServerAddress) + sizeof(ushort) + NextState.Length;
+        public static int CalculateSize(HandshakePacket packet) => packet.ProtocolVersion.Length + Encoding.UTF8.GetByteCount(packet.ServerAddress) + sizeof(ushort) + packet.NextState.Length;
 
-        public int Serialize(Span<byte> target)
+        public static int Serialize(HandshakePacket packet, Span<byte> target)
         {
             target.Clear();
-            int position = Id.Serialize(target);
-            position += ProtocolVersion.Serialize(target[position..]);
-            position += Encoding.UTF8.GetBytes(ServerAddress, target[position..]);
-            if (!BitConverter.TryWriteBytes(target[position..], ServerPort))
+            int position = VarInt.Serialize(Id, target);
+            position += VarInt.Serialize(packet.ProtocolVersion, target[position..]);
+            position += Encoding.UTF8.GetBytes(packet.ServerAddress, target[position..]);
+            if (!BitConverter.TryWriteBytes(target[position..], packet.ServerPort))
             {
                 throw new InvalidOperationException("Unable to write server port.");
             }
 
             position += sizeof(ushort);
-            position += NextState.Serialize(target[position..]);
+            position += VarInt.Serialize(packet.NextState, target[position..]);
             return position;
         }
 
         public static bool TryDeserialize(ref SequenceReader<byte> reader, [NotNullWhen(true)] out HandshakePacket? result)
         {
-            if (!VarInt.TryDeserialize(ref reader, out VarInt id) || id != Id)
-            {
-                result = default;
-                return false;
-            }
-
-            if (!VarInt.TryDeserialize(ref reader, out VarInt protocolVersion))
-            {
-                result = default;
-                return false;
-            }
-
-            SequencePosition? addressEndPosition = reader.UnreadSequence.PositionOf((byte)0);
-            if (addressEndPosition is null)
-            {
-                result = default;
-                return false;
-            }
-
-            string serverAddress = Encoding.UTF8.GetString(reader.UnreadSequence.Slice(0, addressEndPosition.Value));
-            reader.Advance(reader.UnreadSequence.GetOffset(addressEndPosition.Value) + 1);
-
-            if (!reader.TryReadLittleEndian(out short serverPort))
-            {
-                result = default;
-                return false;
-            }
-
-            if (!VarInt.TryDeserialize(ref reader, out VarInt nextState))
+            if (!reader.TryReadVarInt(out VarInt protocolVersion)
+                || !reader.TryReadString(out string? serverAddress)
+                || !reader.TryReadUnsignedShort(out ushort serverPort)
+                || !reader.TryReadVarInt(out VarInt nextState))
             {
                 result = default;
                 return false;
@@ -72,7 +48,7 @@ namespace Moonlight.Protocol.Net.HandshakeState
             {
                 ProtocolVersion = protocolVersion,
                 ServerAddress = serverAddress,
-                ServerPort = (ushort)serverPort,
+                ServerPort = serverPort,
                 NextState = nextState
             };
 
@@ -82,37 +58,31 @@ namespace Moonlight.Protocol.Net.HandshakeState
         [SuppressMessage("Roslyn", "IDE0046", Justification = "Ternary rabbit hole.")]
         public static HandshakePacket Deserialize(ref SequenceReader<byte> reader)
         {
-            if (!VarInt.TryDeserialize(ref reader, out VarInt protocolVersion))
+            if (!reader.TryReadVarInt(out VarInt protocolVersion))
             {
-                throw new InvalidOperationException("Unable to read protocol version.");
+                throw new ProtocolViolationException("Unable to read protocol version.");
             }
 
-            if (!VarInt.TryDeserialize(ref reader, out VarInt addressLength))
+            if (!reader.TryReadString(out string? serverAddress))
             {
-                throw new InvalidOperationException("Unable to read server address length.");
+                throw new ProtocolViolationException("Unable to read server address.");
             }
 
-            if (!reader.TryReadExact(addressLength, out ReadOnlySequence<byte> addressSequence))
+            if (!reader.TryReadUnsignedShort(out ushort serverPort))
             {
-                throw new InvalidOperationException("Unable to read server address.");
+                throw new ProtocolViolationException("Unable to read server port.");
             }
 
-            string serverAddress = Encoding.UTF8.GetString(addressSequence);
-            if (!reader.TryReadBigEndian(out short serverPort))
+            if (!reader.TryReadVarInt(out VarInt nextState))
             {
-                throw new InvalidOperationException("Unable to read server port.");
-            }
-
-            if (!VarInt.TryDeserialize(ref reader, out VarInt nextState))
-            {
-                throw new InvalidOperationException("Unable to read next state.");
+                throw new ProtocolViolationException("Unable to read next state.");
             }
 
             return new HandshakePacket()
             {
                 ProtocolVersion = protocolVersion,
                 ServerAddress = serverAddress,
-                ServerPort = (ushort)serverPort,
+                ServerPort = serverPort,
                 NextState = nextState
             };
         }

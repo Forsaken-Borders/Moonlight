@@ -17,18 +17,18 @@ namespace Moonlight.Protocol.Net
             Data = data;
         }
 
-        public int CalculateSize() => Id.Length + Data.Length;
+        public static int CalculateSize(UnknownPacket packet) => Id.Length + packet.Data.Length;
 
-        public int Serialize(Span<byte> target)
+        public static int Serialize(UnknownPacket packet, Span<byte> target)
         {
-            int position = Id.Serialize(target);
-            Data.Span.CopyTo(target[position..]);
-            return position + Data.Length;
+            int position = VarInt.Serialize(Id, target);
+            packet.Data.Span.CopyTo(target[position..]);
+            return position + packet.Data.Length;
         }
 
         public static bool TryDeserialize(ref SequenceReader<byte> reader, [NotNullWhen(true)] out UnknownPacket? result)
         {
-            if (!VarInt.TryDeserialize(ref reader, out VarInt id))
+            if (!reader.TryReadVarInt(out VarInt id))
             {
                 result = default;
                 return false;

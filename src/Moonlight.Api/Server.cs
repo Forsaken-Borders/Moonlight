@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moonlight.Api.Events;
 using Moonlight.Api.Events.EventArgs;
 using Moonlight.Api.Net;
+using Moonlight.Protocol.Net;
 using Moonlight.Protocol.Net.HandshakeState;
 
 namespace Moonlight.Api
@@ -72,7 +73,7 @@ namespace Moonlight.Api
 
             _logger.LogInformation("Client connected: {EndPoint}", client.Client.RemoteEndPoint);
 
-            using PacketHandler reader = _handshakePacketReaderFactory.Create(client.GetStream());
+            PacketHandler reader = _handshakePacketReaderFactory.Create(client.GetStream());
             if (await reader.TryReadSequenceAsync(CancellationToken) is ReadOnlySequence<byte> sequence)
             {
                 if (!TryParseLegacyPing(sequence, out SequencePosition position, out HandshakePacket? handshakePacket))
@@ -90,13 +91,13 @@ namespace Moonlight.Api
                 await _packetReceivedServerEvent.InvokeAsync(new PacketReceivedAsyncServerEventArgs()
                 {
                     Packet = handshakePacket,
-                    Reader = reader
+                    PacketHandler = reader
                 });
 
                 await _handshakeServerEvent.InvokeAsync(new HandshakeAsyncServerEventArgs()
                 {
                     HandshakePacket = handshakePacket,
-                    PacketReader = reader
+                    PacketHandler = reader
                 });
 
                 if (handshakePacket.NextState == 1)
@@ -108,8 +109,6 @@ namespace Moonlight.Api
                     _ = HandleLoginAsync(reader);
                 }
             }
-
-            _logger.LogInformation("Client disconnected: {EndPoint}", client.Client.RemoteEndPoint);
         }
 
         private async Task HandleServerStatusAsync(TcpClient client, PacketHandler reader)
@@ -126,10 +125,16 @@ namespace Moonlight.Api
                     }
 
                     clientTimeoutCancellationSource.CancelAfter(Configuration.ClientTimeout);
+                    IPacket? packet = await reader.ReadPacketAsync(clientTimeoutCancellationSource.Token);
+                    if (packet is null)
+                    {
+                        return;
+                    }
+
                     await _packetReceivedServerEvent.InvokeAsync(new PacketReceivedAsyncServerEventArgs()
                     {
-                        Packet = await reader.ReadPacketAsync(clientTimeoutCancellationSource.Token),
-                        Reader = reader
+                        Packet = packet,
+                        PacketHandler = reader
                     });
                 }
             }

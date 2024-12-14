@@ -33,7 +33,7 @@ namespace Moonlight.Tests.Protocol.VariableTypes
             };
 
             byte[] target = new byte[VarInt.MaxLength];
-            int length = varInt.Serialize(target);
+            int length = VarInt.Serialize(varInt, target);
             Assert.AreEqual(expected.Length, length);
             for (int i = 0; i < length; i++)
             {

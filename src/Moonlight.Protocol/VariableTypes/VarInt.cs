@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Moonlight.Protocol.VariableTypes
 {
@@ -13,9 +14,10 @@ namespace Moonlight.Protocol.VariableTypes
         private const int SEGMENT_BITS = 127;
         private const int CONTINUE_BIT = 128;
 
-        public int Value { get; init; }
-        public int Length { get; init; }
+        public required int Value { get; init; }
+        public required int Length { get; init; }
 
+        [SetsRequiredMembers]
         public VarInt(int value)
         {
             Value = value;
@@ -28,9 +30,11 @@ namespace Moonlight.Protocol.VariableTypes
             } while (unsignedValue != 0);
         }
 
-        public int Serialize(Span<byte> target)
+        public static int CalculateSize(VarInt varInt) => varInt.Length;
+
+        public static int Serialize(VarInt varInt, Span<byte> target)
         {
-            uint value = (uint)Value;
+            uint value = (uint)varInt.Value;
             int position = 0;
             do
             {

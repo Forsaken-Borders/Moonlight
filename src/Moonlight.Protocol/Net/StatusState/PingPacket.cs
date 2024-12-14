@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Moonlight.Protocol.VariableTypes;
 
 namespace Moonlight.Protocol.Net.StatusState
@@ -10,34 +11,33 @@ namespace Moonlight.Protocol.Net.StatusState
         public static VarInt Id { get; } = 0x01;
         public required VarLong Payload { get; init; }
 
-        public int CalculateSize() => Id.Length + Payload.Length;
+        public static int CalculateSize(PingPacket packet) => packet.Payload.Length;
 
-        public int Serialize(Span<byte> target)
+        public static int Serialize(PingPacket packet, Span<byte> target)
         {
-            int position = Id.Serialize(target);
-            position += Payload.Serialize(target[position..]);
+            int position = VarInt.Serialize(Id, target);
+            position += VarLong.Serialize(packet.Payload, target[position..]);
             return position;
         }
 
         public static bool TryDeserialize(ref SequenceReader<byte> reader, [NotNullWhen(true)] out PingPacket? result)
         {
-            if (VarLong.TryDeserialize(ref reader, out VarLong payload))
+            if (!reader.TryReadVarLong(out VarLong payload))
             {
-                result = new PingPacket()
-                {
-                    Payload = payload
-                };
-
-                return true;
+                result = default;
+                return false;
             }
 
-            result = default;
-            return false;
+            result = new PingPacket()
+            {
+                Payload = payload
+            };
+
+            return true;
         }
 
-        public static PingPacket Deserialize(ref SequenceReader<byte> reader) => new()
-        {
-            Payload = VarLong.Deserialize(ref reader)
-        };
+        public static PingPacket Deserialize(ref SequenceReader<byte> reader) => !TryDeserialize(ref reader, out PingPacket? result)
+            ? throw new ProtocolViolationException("Not enough data to deserialize PingPacket.")
+            : result;
     }
 }

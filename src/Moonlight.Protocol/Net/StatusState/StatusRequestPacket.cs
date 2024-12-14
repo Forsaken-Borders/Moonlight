@@ -9,11 +9,11 @@ namespace Moonlight.Protocol.Net.StatusState
     {
         public static VarInt Id { get; } = 0x00;
 
-        public int CalculateSize() => Id.Length;
+        public static int CalculateSize(StatusRequestPacket packet) => 0;
 
-        public int Serialize(Span<byte> target)
+        public static int Serialize(StatusRequestPacket packet, Span<byte> target)
         {
-            int position = Id.Serialize(target);
+            int position = VarInt.Serialize(Id, target);
             return position;
         }
 

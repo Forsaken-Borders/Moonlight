@@ -13,7 +13,7 @@ namespace Moonlight.Protocol.Net.HandshakeState
 
         // The compiler will helpfully add the constants together
         // at compile time, so I can leave them separated for readability
-        public static new int CalculateSize() =>
+        public static int CalculateSize(LegacyPingPacket packet) =>
             1 + // Packet ID
             1 + // Server Ping Payload
             1 + // Plugin Message
@@ -25,7 +25,7 @@ namespace Moonlight.Protocol.Net.HandshakeState
             Encoding.BigEndianUnicode.GetByteCount("localhost") + // Hostname
             4; // Port
 
-        public new int Serialize(Span<byte> target)
+        public static int Serialize(LegacyPingPacket packet, Span<byte> target)
         {
             target[0] = 0xFE;
             target[1] = 0x01;
@@ -39,25 +39,25 @@ namespace Moonlight.Protocol.Net.HandshakeState
             int position = Encoding.BigEndianUnicode.GetBytes("MC|PingHost", target[5..]) + 5;
 
             // Calculate the length of the data
-            int dataLength = 1 + 2 + (ServerAddress.Length * 2) + 2 + 4;
+            int dataLength = 1 + 2 + (packet.ServerAddress.Length * 2) + 2 + 4;
 
             // Write the length of the data as a short
             BinaryPrimitives.WriteInt16BigEndian(target[position..], (short)dataLength);
             position += 2;
 
             // Write the protocol version
-            target[position] = (byte)-ProtocolVersion;
+            target[position] = (byte)-packet.ProtocolVersion;
             position++;
 
             // Write the length of the hostname as a short
-            BinaryPrimitives.WriteInt16BigEndian(target[position..], (short)ServerAddress.Length);
+            BinaryPrimitives.WriteInt16BigEndian(target[position..], (short)packet.ServerAddress.Length);
             position += 2;
 
             // Write the hostname
-            position = Encoding.BigEndianUnicode.GetBytes(ServerAddress, target[position..]) + position;
+            position = Encoding.BigEndianUnicode.GetBytes(packet.ServerAddress, target[position..]) + position;
 
             // Write the port
-            BinaryPrimitives.WriteInt32BigEndian(target[position..], ServerPort);
+            BinaryPrimitives.WriteInt32BigEndian(target[position..], packet.ServerPort);
             position += 4;
 
             // Return the position
